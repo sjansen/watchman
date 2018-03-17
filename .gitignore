@@ -1,0 +1,8 @@
+# Directories
+/vendor/
+
+# Files
+.DS_Store
+
+# Patterns
+.*.sw[op]

@@ -1,0 +1,2 @@
+*    whitespace=space-before-tab,trailing-space
+*.go whitespace=indent-with-non-tab,space-before-tab,trailing-space
