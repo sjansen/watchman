@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"time"
 )
 
 type Connection struct {
@@ -26,7 +27,7 @@ func Connect() (*Connection, error) {
 		return nil, err
 	}
 
-	socket, err := net.Dial("unix", sockname)
+	socket, err := dial(sockname, 30*time.Second)
 	if err != nil {
 		return nil, err
 	}
