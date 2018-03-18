@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -11,7 +12,10 @@ func main() {
 	os.Stdout.Write([]byte("Connecting to watchman... "))
 	os.Stdout.Sync()
 
-	c, err := watchman.Connect()
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	defer cancelFunc()
+
+	c, err := watchman.Connect(ctx)
 	if err != nil {
 		fmt.Println("FAILURE")
 		fmt.Fprintln(os.Stderr, err)

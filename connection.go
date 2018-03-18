@@ -1,27 +1,25 @@
 package watchman
 
 import (
-	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"net"
 	"os"
 	"os/exec"
 	"time"
 )
 
 type Connection struct {
-	reader *bufio.Reader
-	socket net.Conn
+	commands chan<- []interface{}
+	results  <-chan result
 	// metadata
 	capabilities map[string]struct{}
 	sockname     string
 	version      string
 }
 
-func Connect() (*Connection, error) {
+func Connect(ctx context.Context) (*Connection, error) {
 	sockname, err := sockname()
 	if err != nil {
 		return nil, err
@@ -33,8 +31,8 @@ func Connect() (*Connection, error) {
 	}
 
 	c := &Connection{
-		reader:   bufio.NewReader(socket),
-		socket:   socket,
+		commands: writer(ctx, socket),
+		results:  reader(ctx, socket),
 		sockname: sockname,
 	}
 	err = c.init()
@@ -58,25 +56,10 @@ func (c *Connection) Version() string {
 	return c.version
 }
 
-func (c *Connection) command(args ...interface{}) (resp map[string]interface{}, err error) {
-	// TODO log warnings
-	req, err := json.Marshal(args)
-	if err != nil {
-		return
-	}
-
-	_, err = fmt.Fprintln(c.socket, string(req))
-	if err != nil {
-		return
-	}
-
-	line, err := c.reader.ReadBytes('\n')
-	if err != nil {
-		return
-	}
-
-	err = json.Unmarshal(line, &resp)
-	return
+func (c *Connection) command(args ...interface{}) (map[string]interface{}, error) {
+	c.commands <- args
+	result := <-c.results
+	return result.resp, result.err
 }
 
 func (c *Connection) init() (err error) {
