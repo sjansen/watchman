@@ -8,14 +8,32 @@
   version = "v0.4.7"
 
 [[projects]]
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
+  version = "v1.1.0"
+
+[[projects]]
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/stretchr/testify"
+  packages = ["assert"]
+  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
+  version = "v1.2.1"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["windows"]
-  revision = "2f1e207ee39ff70f3433e49c6eb52677a515e3b5"
+  revision = "c488ab1dd8481ef762f96a79a9577c27825be697"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "96fbf3207f15bc54416b1bd4f05a5875c8f055c878edadb370f91003414eb4cd"
+  inputs-digest = "1ce0af71161169bc6d03151e1db9a19e6d2068eb923c0a1a708b1c7ee75a14a4"
   solver-name = "gps-cdcl"
   solver-version = 1

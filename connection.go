@@ -10,6 +10,49 @@ import (
 	"time"
 )
 
+type command []interface{}
+
+type connection struct {
+	commands chan<- string
+	events   <-chan string
+}
+
+type event map[string]interface{}
+
+type eventloop struct {
+	commands    chan<- string
+	results     <-chan event
+	unilaterals <-chan event
+}
+
+func loop(c *connection) (l *eventloop) {
+	commands := make(chan string)
+	results := make(chan event)
+	unilaterals := make(chan event)
+	l = &eventloop{
+		commands:    commands,
+		results:     results,
+		unilaterals: unilaterals,
+	}
+
+	go func() {
+		defer close(commands)
+		defer close(results)
+		defer close(unilaterals)
+		for {
+			command := <-commands
+			c.commands <- command
+			pdu := <-c.events
+			var event event
+			if err := json.Unmarshal([]byte(pdu), &event); err == nil {
+				results <- event
+			}
+		}
+	}()
+
+	return
+}
+
 type Connection struct {
 	commands chan<- []interface{}
 	results  <-chan result
