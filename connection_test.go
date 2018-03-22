@@ -46,7 +46,7 @@ var testcases = map[string]testcase{
 	},
 }
 
-func connect(t *testing.T, label string, script []step) (c *connection) {
+func connect(t *testing.T, script []step) (c *connection) {
 	commands := make(chan string)
 	events := make(chan string)
 	c = &connection{
@@ -62,7 +62,7 @@ func connect(t *testing.T, label string, script []step) (c *connection) {
 			case client:
 				actual := <-commands
 				if step.data != actual {
-					t.Errorf("[%s] step %d expected: %#v actual: %#v", label, i, step.data, actual)
+					t.Errorf("step %d expected: %#v actual: %#v", i, step.data, actual)
 				}
 			case server:
 				events <- step.data
@@ -74,26 +74,28 @@ func connect(t *testing.T, label string, script []step) (c *connection) {
 }
 
 func TestEventLoop(t *testing.T) {
-	assert := assert.New(t)
-
 	for label, tc := range testcases {
-		c := connect(t, label, tc.script)
-		l := loop(c)
+		t.Run(label, func(t *testing.T) {
+			assert := assert.New(t)
 
-		n := 0
-		for _, step := range tc.script {
-			switch step.src {
-			case client:
-				l.commands <- step.data
-				actual := <-l.results
-				expected := tc.results[n]
-				n += 1
-				if !assert.Equal(expected, actual, label) {
-					break
+			c := connect(t, tc.script)
+			l := loop(c)
+
+			n := 0
+			for _, step := range tc.script {
+				switch step.src {
+				case client:
+					expected := tc.results[n]
+					n += 1
+					l.commands <- step.data
+					actual := <-l.results
+					if !assert.Equal(expected, actual) {
+						break
+					}
+				case server:
+					continue
 				}
-			case server:
-				continue
 			}
-		}
+		})
 	}
 }
