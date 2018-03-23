@@ -28,10 +28,10 @@ func loop(s *server) (l *eventloop) {
 					s.commands <- command
 				}
 				return ok
-			case data, ok := <-s.events:
+			case pdu, ok := <-s.events:
 				if ok {
 					var event object
-					if err := json.Unmarshal([]byte(data), &event); err != nil {
+					if err := json.Unmarshal(pdu, &event); err != nil {
 						ok = false
 						event = object{"error": err.Error()}
 					}
@@ -44,10 +44,10 @@ func loop(s *server) (l *eventloop) {
 
 	expectResult := func() (ok bool) {
 		for {
-			data, ok := <-s.events
+			pdu, ok := <-s.events
 			if ok {
 				var event object
-				if err := json.Unmarshal([]byte(data), &event); err != nil {
+				if err := json.Unmarshal(pdu, &event); err != nil {
 					ok = false
 					event = object{"error": err.Error()}
 				}

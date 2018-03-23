@@ -155,7 +155,7 @@ var testcases = map[string]testcase{
 
 func start(t *testing.T, script []step) (s *server) {
 	commands := make(chan string)
-	events := make(chan string)
+	events := make(chan []byte)
 	s = &server{
 		commands: commands,
 		events:   events,
@@ -172,7 +172,7 @@ func start(t *testing.T, script []step) (s *server) {
 					t.Errorf("step %d expected: %#v actual: %#v", i, step.data, actual)
 				}
 			case SERVER:
-				events <- step.data
+				events <- []byte(step.data)
 			}
 		}
 	}()

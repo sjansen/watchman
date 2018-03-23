@@ -7,7 +7,7 @@ import (
 
 type server struct {
 	commands chan<- string
-	events   <-chan string
+	events   <-chan []byte
 }
 
 func producer(socket net.Conn) <-chan []byte {
