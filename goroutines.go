@@ -1,7 +1,6 @@
 package watchman
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,7 +8,7 @@ import (
 )
 
 type result struct {
-	resp map[string]interface{}
+	resp object
 	err  error
 }
 
@@ -18,19 +17,20 @@ func reader(ctx context.Context, socket net.Conn) <-chan result {
 	events := make(chan result)
 	go func() {
 		defer close(events)
-		r := bufio.NewReader(socket)
+		bytes := producer(socket)
 
 		for {
 			result := result{}
-			if pdu, err := r.ReadBytes('\n'); err != nil {
-				result.err = err
-			} else {
-				var event map[string]interface{}
-				if err = json.Unmarshal(pdu, &event); err != nil {
+			select {
+			case pdu := <-bytes:
+				var event object
+				if err := json.Unmarshal(pdu, &event); err != nil {
 					result.err = err
 				} else {
 					result.resp = event
 				}
+			case <-ctx.Done():
+				return
 			}
 			select {
 			case events <- result:
