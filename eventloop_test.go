@@ -1,8 +1,10 @@
 package watchman
 
 import (
+	"context"
 	"testing"
 
+	"github.com/fortytw2/leaktest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -153,7 +155,7 @@ var testcases = map[string]testcase{
 	},
 }
 
-func start(t *testing.T, script []step) (s *server) {
+func start(ctx context.Context, t *testing.T, script []step) (s *server) {
 	commands := make(chan string)
 	events := make(chan []byte)
 	s = &server{
@@ -167,12 +169,20 @@ func start(t *testing.T, script []step) (s *server) {
 		for i, step := range script {
 			switch step.src {
 			case CLIENT:
-				actual := <-commands
-				if step.data != actual {
-					t.Errorf("step %d expected: %#v actual: %#v", i, step.data, actual)
+				select {
+				case actual := <-commands:
+					if step.data != actual {
+						t.Errorf("step %d expected: %#v actual: %#v", i, step.data, actual)
+					}
+				case <-ctx.Done():
+					return
 				}
 			case SERVER:
-				events <- []byte(step.data)
+				select {
+				case events <- []byte(step.data):
+				case <-ctx.Done():
+					return
+				}
 			}
 		}
 	}()
@@ -185,8 +195,11 @@ func TestEventLoop(t *testing.T) {
 		t.Run(label, func(t *testing.T) {
 			assert := assert.New(t)
 
-			server := start(t, tc.script)
-			l := loop(server)
+			ctx, cancelFunc := context.WithCancel(context.Background())
+			defer cancelFunc()
+
+			server := start(ctx, t, tc.script)
+			l := loop(ctx, server)
 
 			results := 0
 			unilaterals := 0
@@ -215,6 +228,28 @@ func TestEventLoop(t *testing.T) {
 
 				}
 			}
+		})
+	}
+}
+
+func TestEventLoopCancellation(t *testing.T) {
+	script := testcases["simple"].script
+
+	for _, label := range []string{"before", "after"} {
+		t.Run(label, func(t *testing.T) {
+			defer leaktest.Check(t)()
+
+			ctx, cancelFunc := context.WithCancel(context.Background())
+			server := start(ctx, t, script)
+			l := loop(ctx, server)
+			if label == "before" {
+				cancelFunc()
+			} else {
+				l.commands <- script[0].data
+				cancelFunc()
+				<-l.results
+			}
+
 		})
 	}
 }

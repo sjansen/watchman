@@ -1,6 +1,9 @@
 package watchman
 
-import "encoding/json"
+import (
+	"context"
+	"encoding/json"
+)
 
 type object map[string]interface{}
 
@@ -10,7 +13,7 @@ type eventloop struct {
 	unilaterals <-chan object
 }
 
-func loop(s *server) (l *eventloop) {
+func loop(ctx context.Context, s *server) (l *eventloop) {
 	commands := make(chan string)
 	results := make(chan object)
 	unilaterals := make(chan object)
@@ -38,28 +41,34 @@ func loop(s *server) (l *eventloop) {
 					unilaterals <- event
 				}
 				return ok
+			case <-ctx.Done():
+				return false
 			}
 		}
 	}
 
 	expectResult := func() (ok bool) {
 		for {
-			pdu, ok := <-s.events
-			if ok {
-				var event object
-				if err := json.Unmarshal(pdu, &event); err != nil {
-					ok = false
-					event = object{"error": err.Error()}
+			select {
+			case pdu, ok := <-s.events:
+				if ok {
+					var event object
+					if err := json.Unmarshal(pdu, &event); err != nil {
+						ok = false
+						event = object{"error": err.Error()}
+					}
+					if _, u8l := event["log"]; u8l {
+						unilaterals <- event
+					} else if _, u8l := event["subscription"]; u8l {
+						unilaterals <- event
+					} else {
+						results <- event
+					}
 				}
-				if _, u8l := event["log"]; u8l {
-					unilaterals <- event
-				} else if _, u8l := event["subscription"]; u8l {
-					unilaterals <- event
-				} else {
-					results <- event
-				}
+				return ok
+			case <-ctx.Done():
+				return false
 			}
-			return ok
 		}
 	}
 

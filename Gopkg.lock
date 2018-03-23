@@ -14,6 +14,12 @@
   version = "v1.1.0"
 
 [[projects]]
+  name = "github.com/fortytw2/leaktest"
+  packages = ["."]
+  revision = "a5ef70473c97b71626b9abeda80ee92ba2a7de9e"
+  version = "v1.2.0"
+
+[[projects]]
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
@@ -34,6 +40,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1ce0af71161169bc6d03151e1db9a19e6d2068eb923c0a1a708b1c7ee75a14a4"
+  inputs-digest = "77fa479662a20ba725c029effc13ecd736af8ee0398e22e3b404cc0450f89f13"
   solver-name = "gps-cdcl"
   solver-version = 1
