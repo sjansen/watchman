@@ -9,8 +9,8 @@ import (
 type source int
 
 const (
-	client source = iota
-	server
+	CLIENT source = iota
+	SERVER
 )
 
 type step struct {
@@ -28,10 +28,10 @@ type testcase struct {
 var testcases = map[string]testcase{
 	"simple": testcase{
 		script: []step{
-			{client, false, `["version"]`},
-			{server, false, `{"version":"4.9.0"}`},
-			{client, false, `["list-capabilities"]`},
-			{server, false, `{"capabilities":["relative_root","cmd-subscribe"],"version":"4.9.0"}`},
+			{CLIENT, false, `["version"]`},
+			{SERVER, false, `{"version":"4.9.0"}`},
+			{CLIENT, false, `["list-capabilities"]`},
+			{SERVER, false, `{"capabilities":["relative_root","cmd-subscribe"],"version":"4.9.0"}`},
 		},
 		results: []object{
 			{
@@ -47,9 +47,9 @@ var testcases = map[string]testcase{
 	},
 	"log-level": testcase{
 		script: []step{
-			{client, false, `["log-level", "error"]`},
-			{server, false, `{"log_level":"error","version":"4.9.0"}`},
-			{server, true, `{"level":"error","unilateral":true,"log":"2018-03-22T01:18:52,901: [client=0x7ffe1dc035d8:stm=0x7ffe1dc03460:pid=0] test message\n"}`},
+			{CLIENT, false, `["log-level", "error"]`},
+			{SERVER, false, `{"log_level":"error","version":"4.9.0"}`},
+			{SERVER, true, `{"level":"error","unilateral":true,"log":"2018-03-22T01:18:52,901: [client=0x7ffe1dc035d8:stm=0x7ffe1dc03460:pid=0] test message\n"}`},
 		},
 		results: []object{
 			{
@@ -67,10 +67,10 @@ var testcases = map[string]testcase{
 	},
 	"subscribe": testcase{
 		script: []step{
-			{client, false, `["subscribe", "/tmp", "sub1", {"fields": ["name"]}]`},
-			{server, false, `{"version":"4.9.0","clock":"c:1521588867:575:1:2","subscribe":"sub1"}`},
-			{server, true, `{"version":"4.9.0","unilateral":true,"subscription":"sub1","clock":"c:1521588867:575:1:2","root":"/tmp","files":["foo"],"is_fresh_instance":true}`},
-			{server, true, `{"version":"4.9.0","unilateral":true,"subscription":"sub1","clock":"c:1521588867:575:1:3","since":"c:1521588867:575:1:2","root":"/tmp","files":["bar"],"is_fresh_instance":false}`},
+			{CLIENT, false, `["subscribe", "/tmp", "sub1", {"fields": ["name"]}]`},
+			{SERVER, false, `{"version":"4.9.0","clock":"c:1521588867:575:1:2","subscribe":"sub1"}`},
+			{SERVER, true, `{"version":"4.9.0","unilateral":true,"subscription":"sub1","clock":"c:1521588867:575:1:2","root":"/tmp","files":["foo"],"is_fresh_instance":true}`},
+			{SERVER, true, `{"version":"4.9.0","unilateral":true,"subscription":"sub1","clock":"c:1521588867:575:1:3","since":"c:1521588867:575:1:2","root":"/tmp","files":["bar"],"is_fresh_instance":false}`},
 		},
 		results: []object{
 			{
@@ -103,14 +103,14 @@ var testcases = map[string]testcase{
 	},
 	"watch-project": testcase{
 		script: []step{
-			{client, false, `["watch-project", "/tmp"]`},
-			{server, false, `{"version":"4.9.0","watcher":"fsevents","watch":"/tmp"}`},
-			{client, false, `["clock", "/tmp"]`},
-			{server, false, `{"version":"4.9.0","clock":"c:1521588867:575:1:5"}`},
-			{client, false, `["subscribe", "/tmp", "sub2", {"since":"c:1521588867:575:1:5", "fields":["name"]}]`},
-			{server, false, `{"version":"4.9.0","clock":"c:1521588867:575:1:5","subscribe":"sub2"}`},
-			{server, true, `{"version":"4.9.0","unilateral":true,"subscription":"sub2","clock":"c:1521588867:575:1:6","since":"c:1521588867:575:1:5","root":"/tmp","files":["baz"],"is_fresh_instance":false}`},
-			{server, true, `{"version":"4.9.0","unilateral":true,"subscription":"sub2","clock":"c:1521588867:575:1:7","since":"c:1521588867:575:1:6","root":"/tmp","files":["qux"],"is_fresh_instance":false}`},
+			{CLIENT, false, `["watch-project", "/tmp"]`},
+			{SERVER, false, `{"version":"4.9.0","watcher":"fsevents","watch":"/tmp"}`},
+			{CLIENT, false, `["clock", "/tmp"]`},
+			{SERVER, false, `{"version":"4.9.0","clock":"c:1521588867:575:1:5"}`},
+			{CLIENT, false, `["subscribe", "/tmp", "sub2", {"since":"c:1521588867:575:1:5", "fields":["name"]}]`},
+			{SERVER, false, `{"version":"4.9.0","clock":"c:1521588867:575:1:5","subscribe":"sub2"}`},
+			{SERVER, true, `{"version":"4.9.0","unilateral":true,"subscription":"sub2","clock":"c:1521588867:575:1:6","since":"c:1521588867:575:1:5","root":"/tmp","files":["baz"],"is_fresh_instance":false}`},
+			{SERVER, true, `{"version":"4.9.0","unilateral":true,"subscription":"sub2","clock":"c:1521588867:575:1:7","since":"c:1521588867:575:1:6","root":"/tmp","files":["qux"],"is_fresh_instance":false}`},
 		},
 		results: []object{
 			{
@@ -153,10 +153,10 @@ var testcases = map[string]testcase{
 	},
 }
 
-func connect(t *testing.T, script []step) (c *connection) {
+func start(t *testing.T, script []step) (s *server) {
 	commands := make(chan string)
 	events := make(chan string)
-	c = &connection{
+	s = &server{
 		commands: commands,
 		events:   events,
 	}
@@ -166,12 +166,12 @@ func connect(t *testing.T, script []step) (c *connection) {
 		defer close(events)
 		for i, step := range script {
 			switch step.src {
-			case client:
+			case CLIENT:
 				actual := <-commands
 				if step.data != actual {
 					t.Errorf("step %d expected: %#v actual: %#v", i, step.data, actual)
 				}
-			case server:
+			case SERVER:
 				events <- step.data
 			}
 		}
@@ -185,14 +185,14 @@ func TestEventLoop(t *testing.T) {
 		t.Run(label, func(t *testing.T) {
 			assert := assert.New(t)
 
-			c := connect(t, tc.script)
-			l := loop(c)
+			server := start(t, tc.script)
+			l := loop(server)
 
 			results := 0
 			unilaterals := 0
 			for _, step := range tc.script {
 				switch step.src {
-				case client:
+				case CLIENT:
 
 					expected := tc.results[results]
 					results += 1
@@ -202,7 +202,7 @@ func TestEventLoop(t *testing.T) {
 						break
 					}
 
-				case server:
+				case SERVER:
 
 					if step.u8l {
 						expected := tc.unilaterals[unilaterals]
