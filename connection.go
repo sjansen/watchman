@@ -17,22 +17,65 @@ type connection struct {
 	events   <-chan string
 }
 
-type event map[string]interface{}
+type object map[string]interface{}
 
 type eventloop struct {
 	commands    chan<- string
-	results     <-chan event
-	unilaterals <-chan event
+	results     <-chan object
+	unilaterals <-chan object
 }
 
 func loop(c *connection) (l *eventloop) {
 	commands := make(chan string)
-	results := make(chan event)
-	unilaterals := make(chan event)
+	results := make(chan object)
+	unilaterals := make(chan object)
 	l = &eventloop{
 		commands:    commands,
 		results:     results,
 		unilaterals: unilaterals,
+	}
+
+	expectCommand := func() (ok bool) {
+		for {
+			select {
+			case command, ok := <-commands:
+				if ok {
+					c.commands <- command
+				}
+				return ok
+			case data, ok := <-c.events:
+				if ok {
+					var event object
+					if err := json.Unmarshal([]byte(data), &event); err != nil {
+						ok = false
+						event = object{"error": err.Error()}
+					}
+					unilaterals <- event
+				}
+				return ok
+			}
+		}
+	}
+
+	expectResult := func() (ok bool) {
+		for {
+			data, ok := <-c.events
+			if ok {
+				var event object
+				if err := json.Unmarshal([]byte(data), &event); err != nil {
+					ok = false
+					event = object{"error": err.Error()}
+				}
+				if _, u8l := event["log"]; u8l {
+					unilaterals <- event
+				} else if _, u8l := event["subscription"]; u8l {
+					unilaterals <- event
+				} else {
+					results <- event
+				}
+			}
+			return ok
+		}
 	}
 
 	go func() {
@@ -40,12 +83,11 @@ func loop(c *connection) (l *eventloop) {
 		defer close(results)
 		defer close(unilaterals)
 		for {
-			command := <-commands
-			c.commands <- command
-			pdu := <-c.events
-			var event event
-			if err := json.Unmarshal([]byte(pdu), &event); err == nil {
-				results <- event
+			if ok := expectCommand(); !ok {
+				return
+			}
+			if ok := expectResult(); !ok {
+				return
 			}
 		}
 	}()
