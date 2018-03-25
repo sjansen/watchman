@@ -40,6 +40,7 @@ func loop(s *server) (l *eventloop, stop func(bool)) {
 				}
 				return ok
 			case pdu, ok := <-s.events:
+				// TODO log warnings
 				if ok {
 					var event object
 					if err := json.Unmarshal(pdu, &event); err != nil {
@@ -57,6 +58,7 @@ func loop(s *server) (l *eventloop, stop func(bool)) {
 		for {
 			select {
 			case pdu, ok := <-s.events:
+				// TODO log warnings
 				if ok {
 					var event object
 					if err := json.Unmarshal(pdu, &event); err != nil {

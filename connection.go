@@ -13,7 +13,7 @@ import (
 type command []interface{}
 
 type Connection struct {
-	commands chan<- []interface{}
+	commands chan<- string
 	results  <-chan object
 	// metadata
 	capabilities map[string]struct{}
@@ -32,9 +32,13 @@ func Connect(ctx context.Context) (*Connection, error) {
 		return nil, err
 	}
 
+	server := serverFromSocket(ctx, socket)
+	l, stop := loop(server)
+	defer stop(false)
+
 	c := &Connection{
-		commands: writer(ctx, socket),
-		results:  reader(ctx, socket),
+		commands: l.commands,
+		results:  l.results,
 		sockname: sockname,
 	}
 	err = c.init()
@@ -59,7 +63,12 @@ func (c *Connection) Version() string {
 }
 
 func (c *Connection) command(args ...interface{}) (object, error) {
-	c.commands <- args
+	command, err := json.Marshal(args)
+	if err != nil {
+		return nil, err
+	}
+
+	c.commands <- string(command)
 	event := <-c.results
 	if msg, ok := event["error"]; ok {
 		return event, errors.New(msg.(string))
