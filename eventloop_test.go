@@ -155,7 +155,12 @@ var testcases = map[string]testcase{
 	},
 }
 
-func start(ctx context.Context, t *testing.T, script []step) (s *server) {
+func serverFromScript(ctx context.Context, t *testing.T, script []step) (s *server) {
+	/* SHUTDOWN
+	s.commands: closed by caller
+	s.events:   closed locally
+	*/
+
 	commands := make(chan string)
 	events := make(chan []byte)
 	s = &server{
@@ -164,14 +169,20 @@ func start(ctx context.Context, t *testing.T, script []step) (s *server) {
 	}
 
 	go func() {
-		defer close(commands)
-		defer close(events)
+		defer func() {
+			close(events)
+			for _ = range <-commands {
+				continue
+			}
+		}()
 		for i, step := range script {
 			switch step.src {
 			case CLIENT:
 				select {
-				case actual := <-commands:
-					if step.data != actual {
+				case actual, ok := <-commands:
+					if !ok {
+						t.Errorf("step %d commands channel closed early", i)
+					} else if step.data != actual {
 						t.Errorf("step %d expected: %#v actual: %#v", i, step.data, actual)
 					}
 				case <-ctx.Done():
@@ -191,22 +202,35 @@ func start(ctx context.Context, t *testing.T, script []step) (s *server) {
 }
 
 func TestEventLoop(t *testing.T) {
+	/* SHUTDOWN
+	l.commands:      closed by stop()
+	l.results:       closed by *eventloop
+	l.unilaterals:   closed by *eventloop
+	server.commands: closed by *eventloop
+	server.events:   closed by *server
+	*/
+
 	for label, tc := range testcases {
 		t.Run(label, func(t *testing.T) {
 			assert := assert.New(t)
 
 			ctx, cancelFunc := context.WithCancel(context.Background())
+			server := serverFromScript(ctx, t, tc.script)
 			defer cancelFunc()
 
-			server := start(ctx, t, tc.script)
-			l := loop(ctx, server)
+			l, stop := loop(server)
+			defer func() {
+				// delayClose=true so that script steps aren't skipped
+				stop(true)
+				leaktest.Check(t)()
+			}()
 
 			results := 0
 			unilaterals := 0
 			for _, step := range tc.script {
 				switch step.src {
-				case CLIENT:
 
+				case CLIENT:
 					expected := tc.results[results]
 					results += 1
 					l.commands <- step.data
@@ -216,7 +240,6 @@ func TestEventLoop(t *testing.T) {
 					}
 
 				case SERVER:
-
 					if step.u8l {
 						expected := tc.unilaterals[unilaterals]
 						unilaterals += 1
@@ -233,21 +256,34 @@ func TestEventLoop(t *testing.T) {
 }
 
 func TestEventLoopCancellation(t *testing.T) {
+	/* SHUTDOWN
+	l.commands:      closed by stop()
+	l.results:       closed by *eventloop
+	l.unilaterals:   closed by *eventloop
+	server.commands: closed by *eventloop
+	server.events:   closed by *server
+	*/
+
 	script := testcases["simple"].script
 
 	for _, label := range []string{"before", "after"} {
 		t.Run(label, func(t *testing.T) {
-			defer leaktest.Check(t)()
-
 			ctx, cancelFunc := context.WithCancel(context.Background())
-			server := start(ctx, t, script)
-			l := loop(ctx, server)
+			server := serverFromScript(ctx, t, script)
+
+			l, stop := loop(server)
+			defer func() {
+				// delayClose=true so that shutdown is triggered
+				// by cancellation instead of some other event
+				stop(true)
+				leaktest.Check(t)()
+			}()
+
 			if label == "before" {
 				cancelFunc()
 			} else {
 				l.commands <- script[0].data
 				cancelFunc()
-				<-l.results
 			}
 
 		})

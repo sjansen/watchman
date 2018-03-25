@@ -1,8 +1,8 @@
 package watchman
 
 import (
-	"context"
 	"encoding/json"
+	"runtime"
 )
 
 type object map[string]interface{}
@@ -13,7 +13,15 @@ type eventloop struct {
 	unilaterals <-chan object
 }
 
-func loop(ctx context.Context, s *server) (l *eventloop) {
+func loop(s *server) (l *eventloop, stop func(bool)) {
+	/* SHUTDOWN
+	commands:    closed by caller/stop()
+	results:     closed locally
+	unilaterals: closed locally
+	s.commands:  closed locally
+	s.events:    closed by *server
+	*/
+
 	commands := make(chan string)
 	results := make(chan object)
 	unilaterals := make(chan object)
@@ -41,8 +49,6 @@ func loop(ctx context.Context, s *server) (l *eventloop) {
 					unilaterals <- event
 				}
 				return ok
-			case <-ctx.Done():
-				return false
 			}
 		}
 	}
@@ -66,16 +72,43 @@ func loop(ctx context.Context, s *server) (l *eventloop) {
 					}
 				}
 				return ok
-			case <-ctx.Done():
-				return false
 			}
 		}
 	}
 
+	// Close and empty channels so that other goroutines can shutdown.
+	// IMPORTANT: delayClose should normally be false. It is useful in
+	// tests that would be invalidated by close l.commands too early.
+	stop = func(delayClose bool) {
+		if !delayClose {
+			close(l.commands)
+		}
+		for _ = range <-l.results {
+			continue
+		}
+		for _ = range <-l.unilaterals {
+			continue
+		}
+		if delayClose {
+			close(l.commands)
+		}
+		// allow other goroutines to run their shutdown logic;
+		// avoid false positives in tests detect leaks
+		runtime.Gosched()
+	}
+
 	go func() {
-		defer close(commands)
-		defer close(results)
-		defer close(unilaterals)
+		defer func() {
+			close(results)
+			close(unilaterals)
+			close(s.commands)
+			for _ = range <-commands {
+				continue
+			}
+			for _ = range <-s.events {
+				continue
+			}
+		}()
 		for {
 			if ok := expectCommand(); !ok {
 				return
