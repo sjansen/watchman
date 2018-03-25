@@ -203,9 +203,9 @@ func serverFromScript(ctx context.Context, t *testing.T, script []step) (s *serv
 
 func TestEventLoop(t *testing.T) {
 	/* SHUTDOWN
-	l.commands:      closed by stop()
-	l.results:       closed by *eventloop
-	l.unilaterals:   closed by *eventloop
+	loop.commands:      closed by stop()
+	loop.results:       closed by *eventloop
+	loop.unilaterals:   closed by *eventloop
 	server.commands: closed by *eventloop
 	server.events:   closed by *server
 	*/
@@ -218,7 +218,7 @@ func TestEventLoop(t *testing.T) {
 			server := serverFromScript(ctx, t, tc.script)
 			defer cancelFunc()
 
-			l, stop := loop(server)
+			loop, stop := startEventLoop(server)
 			defer func() {
 				// delayClose=true so that script steps aren't skipped
 				stop(true)
@@ -233,8 +233,8 @@ func TestEventLoop(t *testing.T) {
 				case CLIENT:
 					expected := tc.results[results]
 					results += 1
-					l.commands <- step.data
-					actual := <-l.results
+					loop.commands <- step.data
+					actual := <-loop.results
 					if !assert.Equal(expected, actual) {
 						break
 					}
@@ -243,7 +243,7 @@ func TestEventLoop(t *testing.T) {
 					if step.u8l {
 						expected := tc.unilaterals[unilaterals]
 						unilaterals += 1
-						actual := <-l.unilaterals
+						actual := <-loop.unilaterals
 						if !assert.Equal(expected, actual) {
 							break
 						}
@@ -257,9 +257,9 @@ func TestEventLoop(t *testing.T) {
 
 func TestEventLoopCancellation(t *testing.T) {
 	/* SHUTDOWN
-	l.commands:      closed by stop()
-	l.results:       closed by *eventloop
-	l.unilaterals:   closed by *eventloop
+	loop.commands:      closed by stop()
+	loop.results:       closed by *eventloop
+	loop.unilaterals:   closed by *eventloop
 	server.commands: closed by *eventloop
 	server.events:   closed by *server
 	*/
@@ -271,7 +271,7 @@ func TestEventLoopCancellation(t *testing.T) {
 			ctx, cancelFunc := context.WithCancel(context.Background())
 			server := serverFromScript(ctx, t, script)
 
-			l, stop := loop(server)
+			loop, stop := startEventLoop(server)
 			defer func() {
 				// delayClose=true so that shutdown is triggered
 				// by cancellation instead of some other event
@@ -282,7 +282,7 @@ func TestEventLoopCancellation(t *testing.T) {
 			if label == "before" {
 				cancelFunc()
 			} else {
-				l.commands <- script[0].data
+				loop.commands <- script[0].data
 				cancelFunc()
 			}
 

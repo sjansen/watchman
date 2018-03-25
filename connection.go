@@ -33,12 +33,12 @@ func Connect(ctx context.Context) (*Connection, error) {
 	}
 
 	server := serverFromSocket(ctx, socket)
-	l, stop := loop(server)
+	loop, stop := startEventLoop(server)
 	defer stop(false)
 
 	c := &Connection{
-		commands: l.commands,
-		results:  l.results,
+		commands: loop.commands,
+		results:  loop.results,
 		sockname: sockname,
 	}
 	err = c.init()

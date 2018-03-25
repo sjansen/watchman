@@ -13,7 +13,7 @@ type eventloop struct {
 	unilaterals <-chan object
 }
 
-func loop(s *server) (l *eventloop, stop func(bool)) {
+func startEventLoop(s *server) (l *eventloop, stop func(bool)) {
 	/* SHUTDOWN
 	commands:    closed by caller/stop()
 	results:     closed locally
