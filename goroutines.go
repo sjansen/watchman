@@ -7,33 +7,25 @@ import (
 	"net"
 )
 
-type result struct {
-	resp object
-	err  error
-}
-
-func reader(ctx context.Context, socket net.Conn) <-chan result {
+func reader(ctx context.Context, socket net.Conn) <-chan object {
 	// TODO log warnings
-	events := make(chan result)
+	events := make(chan object)
 	go func() {
 		defer close(events)
 		bytes := producer(socket)
 
 		for {
-			result := result{}
+			var event object
 			select {
 			case pdu := <-bytes:
-				var event object
 				if err := json.Unmarshal(pdu, &event); err != nil {
-					result.err = err
-				} else {
-					result.resp = event
+					event = object{"error": err.Error()}
 				}
 			case <-ctx.Done():
 				return
 			}
 			select {
-			case events <- result:
+			case events <- event:
 			case <-ctx.Done():
 				return
 			}

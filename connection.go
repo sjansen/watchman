@@ -14,7 +14,7 @@ type command []interface{}
 
 type Connection struct {
 	commands chan<- []interface{}
-	results  <-chan result
+	results  <-chan object
 	// metadata
 	capabilities map[string]struct{}
 	sockname     string
@@ -58,10 +58,13 @@ func (c *Connection) Version() string {
 	return c.version
 }
 
-func (c *Connection) command(args ...interface{}) (map[string]interface{}, error) {
+func (c *Connection) command(args ...interface{}) (object, error) {
 	c.commands <- args
-	result := <-c.results
-	return result.resp, result.err
+	event := <-c.results
+	if msg, ok := event["error"]; ok {
+		return event, errors.New(msg.(string))
+	}
+	return event, nil
 }
 
 func (c *Connection) init() (err error) {
