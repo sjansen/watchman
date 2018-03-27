@@ -15,6 +15,7 @@ type command []interface{}
 type Connection struct {
 	commands chan<- string
 	results  <-chan object
+	stop     func(bool)
 	// metadata
 	capabilities map[string]struct{}
 	sockname     string
@@ -34,11 +35,11 @@ func Connect(ctx context.Context) (*Connection, error) {
 
 	server := serverFromSocket(ctx, socket)
 	loop, stop := startEventLoop(server)
-	defer stop(false)
 
 	c := &Connection{
 		commands: loop.commands,
 		results:  loop.results,
+		stop:     stop,
 		sockname: sockname,
 	}
 	err = c.init()
@@ -47,6 +48,10 @@ func Connect(ctx context.Context) (*Connection, error) {
 	}
 
 	return c, nil
+}
+
+func (c *Connection) Close() {
+	c.stop(false)
 }
 
 func (c *Connection) HasCapability(capability string) bool {
