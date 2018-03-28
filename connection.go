@@ -67,6 +67,21 @@ func (c *Connection) Version() string {
 	return c.version
 }
 
+func (c *Connection) WatchProject(path string) (w Watch, err error) {
+	var result object
+	if result, err = c.command("watch-project", path); err != nil {
+		return
+	}
+	watch := &watch{
+		conn: c,
+		root: result["watch"].(string),
+	}
+	if relative_path, ok := result["relative_path"].(string); ok {
+		watch.relative_path = relative_path
+	}
+	return watch, nil
+}
+
 func (c *Connection) command(args ...interface{}) (object, error) {
 	command, err := json.Marshal(args)
 	if err != nil {
