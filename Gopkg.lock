@@ -2,44 +2,60 @@
 
 
 [[projects]]
+  digest = "1:adbfc2db750d6fbe0c165ad801ba2d730883a3bc40bc8fe829516eb42ed17771"
   name = "github.com/Microsoft/go-winio"
   packages = ["."]
-  revision = "7da180ee92d8bd8bb8c37fc560e673e6557c392f"
-  version = "v0.4.7"
+  pruneopts = "UT"
+  revision = "a6d595ae73cf27a1b8fc32930668708f45ce1c85"
+  version = "v0.4.9"
 
 [[projects]]
+  digest = "1:a2c1d0e43bd3baaa071d1b9ed72c27d78169b2b269f71c105ac4ba34b1be4a39"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
+  pruneopts = "UT"
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
   version = "v1.1.0"
 
 [[projects]]
+  digest = "1:544229a3ca0fb2dd5ebc2896d3d2ff7ce096d9751635301e44e37e761349ee70"
   name = "github.com/fortytw2/leaktest"
   packages = ["."]
+  pruneopts = "UT"
   revision = "a5ef70473c97b71626b9abeda80ee92ba2a7de9e"
   version = "v1.2.0"
 
 [[projects]]
+  digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
+  pruneopts = "UT"
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:18752d0b95816a1b777505a97f71c7467a8445b8ffb55631a7bf779f6ba4fa83"
   name = "github.com/stretchr/testify"
   packages = ["assert"]
-  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
-  version = "v1.2.1"
+  pruneopts = "UT"
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
 
 [[projects]]
   branch = "master"
+  digest = "1:0e22b636435114add60ec3317a54eb909cea4acf2eef1ddd1d11225eac06acd4"
   name = "golang.org/x/sys"
   packages = ["windows"]
-  revision = "c488ab1dd8481ef762f96a79a9577c27825be697"
+  pruneopts = "UT"
+  revision = "14742f9018cd6651ec7364dc6ee08af0baaa1031"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "77fa479662a20ba725c029effc13ecd736af8ee0398e22e3b404cc0450f89f13"
+  input-imports = [
+    "github.com/Microsoft/go-winio",
+    "github.com/fortytw2/leaktest",
+    "github.com/stretchr/testify/assert",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
