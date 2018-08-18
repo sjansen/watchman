@@ -1,28 +1,27 @@
 package watchman
 
 import (
+	"bufio"
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"net"
 	"os"
 	"os/exec"
 	"time"
 )
 
-type command []interface{}
-
 type Connection struct {
-	commands chan<- string
-	results  <-chan object
-	stop     func(bool)
+	reader *bufio.Reader
+	socket net.Conn
 	// metadata
 	capabilities map[string]struct{}
 	sockname     string
 	version      string
 }
 
-func Connect(ctx context.Context) (*Connection, error) {
+func Connect() (*Connection, error) {
 	sockname, err := sockname()
 	if err != nil {
 		return nil, err
@@ -33,13 +32,9 @@ func Connect(ctx context.Context) (*Connection, error) {
 		return nil, err
 	}
 
-	server := serverFromSocket(ctx, socket)
-	loop, stop := startEventLoop(server)
-
 	c := &Connection{
-		commands: loop.commands,
-		results:  loop.results,
-		stop:     stop,
+		reader:   bufio.NewReader(socket),
+		socket:   socket,
 		sockname: sockname,
 	}
 	err = c.init()
@@ -48,10 +43,6 @@ func Connect(ctx context.Context) (*Connection, error) {
 	}
 
 	return c, nil
-}
-
-func (c *Connection) Close() {
-	c.stop(false)
 }
 
 func (c *Connection) HasCapability(capability string) bool {
@@ -67,33 +58,25 @@ func (c *Connection) Version() string {
 	return c.version
 }
 
-func (c *Connection) WatchProject(path string) (w Watch, err error) {
-	var result object
-	if result, err = c.command("watch-project", path); err != nil {
+func (c *Connection) command(args ...interface{}) (resp map[string]interface{}, err error) {
+	// TODO log warnings
+	req, err := json.Marshal(args)
+	if err != nil {
 		return
 	}
-	watch := &watch{
-		conn: c,
-		root: result["watch"].(string),
-	}
-	if relative_path, ok := result["relative_path"].(string); ok {
-		watch.relative_path = relative_path
-	}
-	return watch, nil
-}
 
-func (c *Connection) command(args ...interface{}) (object, error) {
-	command, err := json.Marshal(args)
+	_, err = fmt.Fprintln(c.socket, string(req))
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	c.commands <- string(command)
-	event := <-c.results
-	if msg, ok := event["error"]; ok {
-		return event, errors.New(msg.(string))
+	line, err := c.reader.ReadBytes('\n')
+	if err != nil {
+		return
 	}
-	return event, nil
+
+	err = json.Unmarshal(line, &resp)
+	return
 }
 
 func (c *Connection) init() (err error) {
