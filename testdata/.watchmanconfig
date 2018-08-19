@@ -1,0 +1,5 @@
+{
+  "idle_reap_age_seconds": 14400,
+  "ignore_dirs": ["build"],
+  "settle": 1000
+}

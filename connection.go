@@ -12,6 +12,20 @@ import (
 	"time"
 )
 
+type Request interface {
+	Args() []interface{}
+}
+
+type Response interface {
+	Version() string
+	Warning() string
+}
+
+type response struct {
+	Version string
+	Warning string
+}
+
 type Connection struct {
 	reader *bufio.Reader
 	socket net.Conn
@@ -59,7 +73,6 @@ func (c *Connection) Version() string {
 }
 
 func (c *Connection) command(args ...interface{}) (resp map[string]interface{}, err error) {
-	// TODO log warnings
 	req, err := json.Marshal(args)
 	if err != nil {
 		return
@@ -97,6 +110,40 @@ func (c *Connection) init() (err error) {
 		c.capabilities = capset
 	}
 
+	return
+}
+
+func (c *Connection) Recv(res interface{}) (Response, error) {
+	line, err := c.reader.ReadBytes('\n')
+	if err != nil {
+		return nil, err
+	}
+
+	var pdu map[string]json.RawMessage
+	err = json.Unmarshal(line, &pdu)
+	if msg, ok := pdu["error"]; ok {
+		return nil, errors.New(string(msg)) // TODO custom Error
+	} else if _, ok := pdu["subscription"]; ok {
+		return nil, nil
+	}
+
+	err = json.Unmarshal(line, res)
+	return nil, err
+}
+
+func (c *Connection) Send(req Request) (err error) {
+	args := req.Args()
+	b, err := json.Marshal(args)
+	if err != nil {
+		return
+	}
+
+	_, err = c.socket.Write(b)
+	if err != nil {
+		return
+	}
+
+	_, err = c.socket.Write([]byte("\n"))
 	return
 }
 
