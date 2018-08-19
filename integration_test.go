@@ -13,10 +13,12 @@ import (
 func TestSendAndRecv(t *testing.T) {
 	require := require.New(t)
 
+	// connect
 	c, err := Connect()
 	require.NoError(err)
 	require.NotEmpty(c.Version())
 
+	// watch-project
 	wd, err := os.Getwd()
 	require.NoError(err)
 
@@ -28,8 +30,10 @@ func TestSendAndRecv(t *testing.T) {
 	res, err := c.Recv(watchProject)
 	require.NoError(err)
 	require.Nil(res)
-	require.NotEmpty(watchProject.Watch())
+	watchRoot := watchProject.Watch()
+	require.NotEmpty(watchRoot)
 
+	// watch-list
 	err = c.Send(&WatchListRequest{})
 	require.NoError(err)
 
@@ -38,4 +42,24 @@ func TestSendAndRecv(t *testing.T) {
 	require.NoError(err)
 	require.Nil(res)
 	require.NotEmpty(watchList.Roots())
+
+	// clock
+	for _, req := range []*ClockRequest{
+		&ClockRequest{
+			Path: watchRoot,
+		},
+		&ClockRequest{
+			Path:        watchRoot,
+			SyncTimeout: 1000,
+		},
+	} {
+		err = c.Send(req)
+		require.NoError(err)
+
+		clock := &ClockResponse{}
+		res, err = c.Recv(clock)
+		require.NoError(err)
+		require.Nil(res)
+		require.NotEmpty(clock.Clock())
+	}
 }
