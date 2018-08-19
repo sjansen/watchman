@@ -45,10 +45,10 @@ func TestSendAndRecv(t *testing.T) {
 
 	// clock
 	for _, req := range []*ClockRequest{
-		&ClockRequest{
+		{
 			Path: watchRoot,
 		},
-		&ClockRequest{
+		{
 			Path:        watchRoot,
 			SyncTimeout: 1000,
 		},

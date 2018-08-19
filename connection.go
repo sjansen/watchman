@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"net"
+	"io"
 	"os"
 	"os/exec"
 	"time"
@@ -29,7 +29,7 @@ type response struct {
 
 type Connection struct {
 	reader *bufio.Reader
-	socket net.Conn
+	socket io.Writer
 	// metadata
 	capabilities map[string]struct{}
 	sockname     string
