@@ -102,7 +102,7 @@ func (c *Connection) Recv(res Response) (event *Event, err error) {
 	var pdu map[string]json.RawMessage
 	err = json.Unmarshal(line, &pdu)
 	if msg, ok := pdu["error"]; ok {
-		err = errors.New(string(msg)) // TODO custom Error
+		err = &WatchmanError{string(msg)}
 		return
 	} else if _, ok := pdu["subscription"]; ok {
 		return

@@ -1,5 +1,9 @@
 package watchman
 
-import "errors"
+type WatchmanError struct {
+	msg string
+}
 
-var MarshalTypeError = errors.New("watchman: Marshal must be called with a struct or pointer to struct")
+func (e *WatchmanError) Error() string {
+	return e.msg
+}
