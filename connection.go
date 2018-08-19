@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+type Event struct{}
+
 type Request interface {
 	Args() []interface{}
 }
@@ -91,22 +93,23 @@ func (c *Connection) init() (err error) {
 	return
 }
 
-func (c *Connection) Recv(res interface{}) (Response, error) {
+func (c *Connection) Recv(res Response) (event *Event, err error) {
 	line, err := c.reader.ReadBytes('\n')
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	var pdu map[string]json.RawMessage
 	err = json.Unmarshal(line, &pdu)
 	if msg, ok := pdu["error"]; ok {
-		return nil, errors.New(string(msg)) // TODO custom Error
+		err = errors.New(string(msg)) // TODO custom Error
+		return
 	} else if _, ok := pdu["subscription"]; ok {
-		return nil, nil
+		return
 	}
 
-	err = json.Unmarshal(line, res)
-	return nil, err
+	err = json.Unmarshal(line, interface{}(res))
+	return
 }
 
 func (c *Connection) Send(req Request) (err error) {

@@ -27,9 +27,9 @@ func TestSendAndRecv(t *testing.T) {
 	require.NoError(err)
 
 	watchProject := &WatchProjectResponse{}
-	res, err := c.Recv(watchProject)
+	event, err := c.Recv(watchProject)
 	require.NoError(err)
-	require.Nil(res)
+	require.Nil(event)
 	watchRoot := watchProject.Watch()
 	require.NotEmpty(watchRoot)
 
@@ -38,9 +38,9 @@ func TestSendAndRecv(t *testing.T) {
 	require.NoError(err)
 
 	watchList := &WatchListResponse{}
-	res, err = c.Recv(watchList)
+	event, err = c.Recv(watchList)
 	require.NoError(err)
-	require.Nil(res)
+	require.Nil(event)
 	require.NotEmpty(watchList.Roots())
 
 	// clock
@@ -57,9 +57,9 @@ func TestSendAndRecv(t *testing.T) {
 		require.NoError(err)
 
 		clock := &ClockResponse{}
-		res, err = c.Recv(clock)
+		event, err = c.Recv(clock)
 		require.NoError(err)
-		require.Nil(res)
+		require.Nil(event)
 		require.NotEmpty(clock.Clock())
 	}
 }
