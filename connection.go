@@ -11,8 +11,6 @@ import (
 	"time"
 )
 
-type Event struct{}
-
 type Request interface {
 	Args() []interface{}
 }
@@ -93,7 +91,7 @@ func (c *Connection) init() (err error) {
 	return
 }
 
-func (c *Connection) Recv(res Response) (event *Event, err error) {
+func (c *Connection) Recv(res Response) (sub *Subscription, err error) {
 	line, err := c.reader.ReadBytes('\n')
 	if err != nil {
 		return
@@ -104,7 +102,9 @@ func (c *Connection) Recv(res Response) (event *Event, err error) {
 	if msg, ok := pdu["error"]; ok {
 		err = &WatchmanError{string(msg)}
 		return
-	} else if _, ok := pdu["subscription"]; ok {
+	} else if _, ok := pdu["unilateral"]; ok {
+		sub = &Subscription{}
+		err = json.Unmarshal(line, sub)
 		return
 	}
 

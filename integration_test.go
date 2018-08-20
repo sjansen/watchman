@@ -62,4 +62,38 @@ func TestSendAndRecv(t *testing.T) {
 		require.Nil(event)
 		require.NotEmpty(clock.Clock())
 	}
+
+	// subscribe
+	err = c.Send(&SubscribeRequest{
+		Root: testdata,
+		Name: "sub:testdata",
+	})
+	require.NoError(err)
+
+	sub := &SubscribeResponse{}
+	event, err = c.Recv(sub)
+	require.NoError(err)
+	require.Nil(event)
+	require.NotEmpty(sub.Clock())
+	require.Equal("sub:testdata", sub.Subscription())
+
+	// unsubscribe
+	err = c.Send(&UnsubscribeRequest{
+		Root: testdata,
+		Name: "sub:testdata",
+	})
+	require.NoError(err)
+
+	var events []*Subscription
+	unsub := &UnsubscribeResponse{}
+	for {
+		event, err = c.Recv(unsub)
+		require.NoError(err)
+		if event == nil {
+			break
+		}
+		events = append(events, event)
+	}
+	require.Equal("sub:testdata", unsub.Subscription())
+	require.NotEmpty(events)
 }
