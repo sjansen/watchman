@@ -8,6 +8,7 @@ package watchman
 */
 
 type Subscription struct {
+	unilateral
 	Clock           string
 	Root            string
 	Subscription    string

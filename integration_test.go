@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const subName = "TANSTAAFL"
+
 func TestSendAndRecv(t *testing.T) {
 	require := require.New(t)
 
@@ -66,7 +68,7 @@ func TestSendAndRecv(t *testing.T) {
 	// subscribe
 	err = c.Send(&SubscribeRequest{
 		Root: testdata,
-		Name: "sub:testdata",
+		Name: subName,
 	})
 	require.NoError(err)
 
@@ -75,16 +77,16 @@ func TestSendAndRecv(t *testing.T) {
 	require.NoError(err)
 	require.Nil(event)
 	require.NotEmpty(sub.Clock())
-	require.Equal("sub:testdata", sub.Subscription())
+	require.Equal(subName, sub.Subscription())
 
 	// unsubscribe
 	err = c.Send(&UnsubscribeRequest{
 		Root: testdata,
-		Name: "sub:testdata",
+		Name: subName,
 	})
 	require.NoError(err)
 
-	var events []*Subscription
+	var unilaterals []Unilateral
 	unsub := &UnsubscribeResponse{}
 	for {
 		event, err = c.Recv(unsub)
@@ -92,8 +94,14 @@ func TestSendAndRecv(t *testing.T) {
 		if event == nil {
 			break
 		}
-		events = append(events, event)
+		unilaterals = append(unilaterals, event)
 	}
-	require.Equal("sub:testdata", unsub.Subscription())
-	require.NotEmpty(events)
+	require.Equal(subName, unsub.Subscription())
+	require.NotEmpty(unilaterals)
+
+	pdu := unilaterals[0].PDU()
+	require.Equal(pdu["subscription"], subName)
+	require.Equal(pdu["root"], testdata)
+	require.NotEmpty(pdu["clock"])
+	require.NotEmpty(pdu["files"])
 }

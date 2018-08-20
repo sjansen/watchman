@@ -25,6 +25,25 @@ type response struct {
 	Warning string
 }
 
+type Unilateral interface {
+	PDU() map[string]interface{}
+}
+
+type unilateral struct {
+	pdu map[string]json.RawMessage
+}
+
+func (u *unilateral) PDU() map[string]interface{} {
+	pdu := map[string]interface{}{}
+	for key, raw := range u.pdu {
+		var val interface{}
+		if err := json.Unmarshal(raw, &val); err == nil {
+			pdu[key] = val
+		}
+	}
+	return pdu
+}
+
 type Connection struct {
 	reader *bufio.Reader
 	socket io.Writer
@@ -91,25 +110,30 @@ func (c *Connection) init() (err error) {
 	return
 }
 
-func (c *Connection) Recv(res Response) (sub *Subscription, err error) {
+func (c *Connection) Recv(res Response) (Unilateral, error) {
 	line, err := c.reader.ReadBytes('\n')
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	var pdu map[string]json.RawMessage
 	err = json.Unmarshal(line, &pdu)
 	if msg, ok := pdu["error"]; ok {
 		err = &WatchmanError{string(msg)}
-		return
+		return nil, err
 	} else if _, ok := pdu["unilateral"]; ok {
-		sub = &Subscription{}
-		err = json.Unmarshal(line, sub)
-		return
+		if _, ok := pdu["subscription"]; ok {
+			sub := &Subscription{
+				unilateral: unilateral{pdu: pdu},
+			}
+			err = json.Unmarshal(line, sub)
+			return sub, err
+		}
+		return &unilateral{pdu: pdu}, nil
 	}
 
 	err = json.Unmarshal(line, interface{}(res))
-	return
+	return nil, err
 }
 
 func (c *Connection) Send(req Request) (err error) {
