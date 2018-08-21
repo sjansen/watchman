@@ -1,6 +1,6 @@
 // +build !windows
 
-package watchman
+package connection
 
 import (
 	"net"

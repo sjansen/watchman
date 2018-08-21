@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/sjansen/watchman"
+	"github.com/sjansen/watchman/connection"
 )
 
 func main() {
-	os.Stdout.Write([]byte("Connecting to watchman... "))
+	os.Stdout.Write([]byte("Connecting to Watchman... "))
 	os.Stdout.Sync()
 
-	c, err := watchman.Connect()
+	c, err := connection.New()
 	if err != nil {
 		fmt.Println("FAILURE")
 		fmt.Fprintln(os.Stderr, err)

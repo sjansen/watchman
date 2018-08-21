@@ -1,4 +1,4 @@
-package watchman
+package connection
 
 /*
 $ watchman watch-list

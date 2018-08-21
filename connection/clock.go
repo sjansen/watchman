@@ -1,4 +1,4 @@
-package watchman
+package connection
 
 /*
 $ watchman clock /path/to/dir

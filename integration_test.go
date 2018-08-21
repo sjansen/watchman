@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	conn "github.com/sjansen/watchman/connection"
 )
 
 const subName = "TANSTAAFL"
@@ -16,7 +18,7 @@ func TestSendAndRecv(t *testing.T) {
 	require := require.New(t)
 
 	// connect
-	c, err := Connect()
+	c, err := conn.New()
 	require.NoError(err)
 	require.NotEmpty(c.Version())
 
@@ -25,10 +27,10 @@ func TestSendAndRecv(t *testing.T) {
 	require.NoError(err)
 
 	testdata := filepath.Join(wd, "testdata")
-	err = c.Send(&WatchProjectRequest{testdata})
+	err = c.Send(&conn.WatchProjectRequest{testdata})
 	require.NoError(err)
 
-	watchProject := &WatchProjectResponse{}
+	watchProject := &conn.WatchProjectResponse{}
 	event, err := c.Recv(watchProject)
 	require.NoError(err)
 	require.Nil(event)
@@ -36,17 +38,17 @@ func TestSendAndRecv(t *testing.T) {
 	require.NotEmpty(watchRoot)
 
 	// watch-list
-	err = c.Send(&WatchListRequest{})
+	err = c.Send(&conn.WatchListRequest{})
 	require.NoError(err)
 
-	watchList := &WatchListResponse{}
+	watchList := &conn.WatchListResponse{}
 	event, err = c.Recv(watchList)
 	require.NoError(err)
 	require.Nil(event)
 	require.NotEmpty(watchList.Roots())
 
 	// clock
-	for _, req := range []*ClockRequest{
+	for _, req := range []*conn.ClockRequest{
 		{
 			Path: watchRoot,
 		},
@@ -58,7 +60,7 @@ func TestSendAndRecv(t *testing.T) {
 		err = c.Send(req)
 		require.NoError(err)
 
-		clock := &ClockResponse{}
+		clock := &conn.ClockResponse{}
 		event, err = c.Recv(clock)
 		require.NoError(err)
 		require.Nil(event)
@@ -66,13 +68,13 @@ func TestSendAndRecv(t *testing.T) {
 	}
 
 	// subscribe
-	err = c.Send(&SubscribeRequest{
+	err = c.Send(&conn.SubscribeRequest{
 		Root: testdata,
 		Name: subName,
 	})
 	require.NoError(err)
 
-	sub := &SubscribeResponse{}
+	sub := &conn.SubscribeResponse{}
 	event, err = c.Recv(sub)
 	require.NoError(err)
 	require.Nil(event)
@@ -80,14 +82,14 @@ func TestSendAndRecv(t *testing.T) {
 	require.Equal(subName, sub.Subscription())
 
 	// unsubscribe
-	err = c.Send(&UnsubscribeRequest{
+	err = c.Send(&conn.UnsubscribeRequest{
 		Root: testdata,
 		Name: subName,
 	})
 	require.NoError(err)
 
-	var unilaterals []Unilateral
-	unsub := &UnsubscribeResponse{}
+	var unilaterals []conn.Unilateral
+	unsub := &conn.UnsubscribeResponse{}
 	for {
 		event, err = c.Recv(unsub)
 		require.NoError(err)

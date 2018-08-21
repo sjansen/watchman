@@ -1,4 +1,4 @@
-package watchman
+package connection
 
 /*
 ["subscribe","/tmp","sub1",{"fields":["name"]}]

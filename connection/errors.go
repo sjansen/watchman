@@ -1,4 +1,4 @@
-package watchman
+package connection
 
 type WatchmanError struct {
 	msg string

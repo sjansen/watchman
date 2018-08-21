@@ -1,4 +1,4 @@
-package watchman
+package connection
 
 import (
 	"bufio"

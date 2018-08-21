@@ -1,4 +1,4 @@
-package watchman
+package connection
 
 import (
 	"bufio"
@@ -53,7 +53,7 @@ type Connection struct {
 	version      string
 }
 
-func Connect() (*Connection, error) {
+func New() (*Connection, error) {
 	sockname, err := sockname()
 	if err != nil {
 		return nil, err

@@ -1,4 +1,4 @@
-package watchman
+package connection
 
 /*
 $ watchman watch-project ~/www/some/child/dir
