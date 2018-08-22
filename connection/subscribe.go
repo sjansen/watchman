@@ -55,7 +55,7 @@ func (res *SubscribeResponse) Warning() string {
 	return res.response.Warning
 }
 
-// Clock returns a value represention when the subscription started.
+// Clock returns a value representing when the subscription started.
 func (res *SubscribeResponse) Clock() string {
 	return res.subscribeResponse.Clock
 }
