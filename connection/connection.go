@@ -117,8 +117,9 @@ func (c *Connection) Recv(res Response) (Unilateral, error) {
 	}
 
 	var pdu map[string]json.RawMessage
-	err = json.Unmarshal(line, &pdu)
-	if msg, ok := pdu["error"]; ok {
+	if err = json.Unmarshal(line, &pdu); err != nil {
+		return nil, err
+	} else if msg, ok := pdu["error"]; ok {
 		err = &WatchmanError{string(msg)}
 		return nil, err
 	} else if _, ok := pdu["unilateral"]; ok {
