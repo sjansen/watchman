@@ -4,22 +4,27 @@ import (
 	"github.com/sjansen/watchman/connection"
 )
 
+// Client provides a high-level interface to the Watchman service.
 type Client struct {
 	Conn *connection.Connection
 }
 
+// HasCapability checks if the Watchman server supports a specific feature.
 func (c *Client) HasCapability(capability string) bool {
 	return c.Conn.HasCapability(capability)
 }
 
+// SockName returns the UNIX domain socket used to communicate with the Watchman server.
 func (c *Client) SockName() string {
 	return c.Conn.SockName()
 }
 
+// Version returns the version of the Watchman server.
 func (c *Client) Version() string {
 	return c.Conn.Version()
 }
 
+// WatchList returns a list of the dirs the Watchman server is watching.
 func (c *Client) WatchList() (roots []string, err error) {
 	req := &connection.WatchListRequest{}
 	if err = c.Conn.Send(req); err != nil {
@@ -39,6 +44,9 @@ func (c *Client) WatchList() (roots []string, err error) {
 	return
 }
 
+// WatchProject requests that the Watchman server monitor a dir or one of its parents for changes.
+//
+// For details, see: https://facebook.github.io/watchman/docs/cmd/watch-project.html
 func (c *Client) WatchProject(path string) (w *Watch, err error) {
 	req := &connection.WatchProjectRequest{Path: path}
 	if err = c.Conn.Send(req); err != nil {

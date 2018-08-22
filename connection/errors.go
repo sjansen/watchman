@@ -1,5 +1,7 @@
 package connection
 
+// WatchmanError is returned when the Watchman server responds to a
+// request with an error instead of a normal response.
 type WatchmanError struct {
 	msg string
 }

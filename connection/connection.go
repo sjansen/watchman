@@ -11,10 +11,12 @@ import (
 	"time"
 )
 
+// Request is the interface used to encode a request PDU.
 type Request interface {
 	Args() []interface{}
 }
 
+// Response is the interface common to all response PDUs.
 type Response interface {
 	Version() string
 	Warning() string
@@ -25,6 +27,11 @@ type response struct {
 	Warning string
 }
 
+// Unilateral is the interface that wraps the PDU method.
+//
+// PDU provides access to response data decoded to primitive Go values.
+// This is most useful when Connection.Recv() is unable to return a
+// more specific Unilateral implementation.
 type Unilateral interface {
 	PDU() map[string]interface{}
 }
@@ -44,6 +51,7 @@ func (u *unilateral) PDU() map[string]interface{} {
 	return pdu
 }
 
+// Connection provides a low-level interface to the Watchman service.
 type Connection struct {
 	reader *bufio.Reader
 	socket io.Writer
@@ -53,6 +61,7 @@ type Connection struct {
 	version      string
 }
 
+// New connects to or starts the Watchman server and returns a new Connection.
 func New() (*Connection, error) {
 	sockname, err := sockname()
 	if err != nil {
@@ -77,15 +86,18 @@ func New() (*Connection, error) {
 	return c, nil
 }
 
+// HasCapability checks if the Watchman server supports a specific feature.
 func (c *Connection) HasCapability(capability string) bool {
 	_, ok := c.capabilities[capability]
 	return ok
 }
 
+// SockName returns the UNIX domain socket used to communicate with the Watchman server.
 func (c *Connection) SockName() string {
 	return c.sockname
 }
 
+// Version returns the version of the Watchman server.
 func (c *Connection) Version() string {
 	return c.version
 }
@@ -110,6 +122,19 @@ func (c *Connection) init() (err error) {
 	return
 }
 
+// Recv reads and decodes a response PDU from the Watchman server.
+// A non-nil Unilateral return value indicates the PDU was sent as
+// a result of an older request, instead of the immediately previous
+// request. Most notably, as a result of the subscribe command.
+//
+// When the PDU was sent as a response to to immediately previous
+// request, the provided Response will be used to decode the PDU.
+//
+// When the PDU was sent unilaterally, Recv will attempt to return the
+// most specific Unilateral implementation available. Type assertion
+// should be used to determine that implementation. Currently, only
+// Subscription responses are recognized, but additional Unilateral
+// implementations may be added in the future.
 func (c *Connection) Recv(res Response) (Unilateral, error) {
 	line, err := c.reader.ReadBytes('\n')
 	if err != nil {
@@ -137,6 +162,7 @@ func (c *Connection) Recv(res Response) (Unilateral, error) {
 	return nil, err
 }
 
+// Send encodes and sends a request PDU to the Watchman server.
 func (c *Connection) Send(req Request) (err error) {
 	args := req.Args()
 	b, err := json.Marshal(args)
