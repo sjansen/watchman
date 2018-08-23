@@ -1,4 +1,4 @@
-package connection
+package protocol
 
 import (
 	"bufio"
@@ -8,29 +8,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUnsubscribe(t *testing.T) {
+func TestWatchList(t *testing.T) {
 	require := require.New(t)
 
 	for _, tc := range []struct {
 		request  string
 		response string
-		req      *UnsubscribeRequest
-		res      *UnsubscribeResponse
+		req      *WatchListRequest
+		res      *WatchListResponse
 	}{
 		{
-			request:  `["unsubscribe","/tmp","sub1"]` + "\n",
-			response: `{"unsubscribe":"sub1", "deleted":true, "version":"4.9.0"}` + "\n",
-			req: &UnsubscribeRequest{
-				Root: "/tmp",
-				Name: "sub1",
-			},
-			res: &UnsubscribeResponse{
-				unsubscribeResponse: unsubscribeResponse{
-					response: response{
-						Version: "4.9.0",
-					},
-					Deleted:      true,
-					Subscription: "sub1",
+			request:  `["watch-list"]` + "\n",
+			response: `{"roots":["/tmp"],"version":"4.9.0"}` + "\n",
+			req:      &WatchListRequest{},
+			res: &WatchListResponse{
+				watchListResponse: watchListResponse{
+					response: response{Version: "4.9.0"},
+					Roots:    []string{"/tmp"},
 				}},
 		},
 	} {
@@ -46,14 +40,13 @@ func TestUnsubscribe(t *testing.T) {
 		require.NoError(err)
 		require.Equal(tc.request, requested.String())
 
-		actual := &UnsubscribeResponse{}
+		actual := &WatchListResponse{}
 		event, err := c.Recv(actual)
 		require.NoError(err)
 		require.Nil(event)
 		require.Equal(tc.res, actual)
 		require.Equal("", actual.Warning())
 		require.Equal("4.9.0", actual.Version())
-		require.Equal(true, actual.Deleted())
-		require.Equal("sub1", actual.Subscription())
+		require.Equal([]string{"/tmp"}, actual.Roots())
 	}
 }

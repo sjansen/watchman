@@ -1,4 +1,4 @@
-package connection
+package protocol
 
 import (
 	"bufio"

@@ -1,12 +1,12 @@
 package watchman
 
 import (
-	"github.com/sjansen/watchman/connection"
+	"github.com/sjansen/watchman/protocol"
 )
 
 // Client provides a high-level interface to the Watchman service.
 type Client struct {
-	Conn *connection.Connection
+	Conn *protocol.Connection
 }
 
 // HasCapability checks if the Watchman server supports a specific feature.
@@ -26,12 +26,12 @@ func (c *Client) Version() string {
 
 // WatchList returns a list of the dirs the Watchman server is watching.
 func (c *Client) WatchList() (roots []string, err error) {
-	req := &connection.WatchListRequest{}
+	req := &protocol.WatchListRequest{}
 	if err = c.Conn.Send(req); err != nil {
 		return
 	}
 
-	res := &connection.WatchListResponse{}
+	res := &protocol.WatchListResponse{}
 	for {
 		if unilateral, err := c.Conn.Recv(res); err != nil {
 			return nil, err
@@ -48,12 +48,12 @@ func (c *Client) WatchList() (roots []string, err error) {
 //
 // For details, see: https://facebook.github.io/watchman/docs/cmd/watch-project.html
 func (c *Client) WatchProject(path string) (w *Watch, err error) {
-	req := &connection.WatchProjectRequest{Path: path}
+	req := &protocol.WatchProjectRequest{Path: path}
 	if err = c.Conn.Send(req); err != nil {
 		return
 	}
 
-	res := &connection.WatchProjectResponse{}
+	res := &protocol.WatchProjectResponse{}
 	for {
 		if unilateral, err := c.Conn.Recv(res); err != nil {
 			return nil, err

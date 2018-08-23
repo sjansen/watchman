@@ -1,4 +1,4 @@
-package connection
+package protocol
 
 import (
 	"bufio"
@@ -61,8 +61,8 @@ type Connection struct {
 	version      string
 }
 
-// New connects to or starts the Watchman server and returns a new Connection.
-func New() (*Connection, error) {
+// Connect connects to or starts the Watchman server and returns a new Connection.
+func Connect() (*Connection, error) {
 	sockname, err := sockname()
 	if err != nil {
 		return nil, err

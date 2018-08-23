@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 
 	"github.com/sjansen/watchman"
-	"github.com/sjansen/watchman/connection"
+	"github.com/sjansen/watchman/protocol"
 )
 
 func connect() *watchman.Client {
 	os.Stdout.Write([]byte("Connecting to Watchman... "))
 	os.Stdout.Sync()
-	conn, err := connection.New()
+	conn, err := protocol.Connect()
 	if err != nil {
 		fmt.Println("FAILURE")
 		die(err)

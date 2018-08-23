@@ -1,4 +1,4 @@
-package connection
+package protocol
 
 /*
 ["subscribe","/tmp","sub1",{"fields":["name"]}]

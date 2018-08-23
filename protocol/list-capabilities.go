@@ -1,4 +1,4 @@
-package connection
+package protocol
 
 /*
 $ watchman list-capabilities

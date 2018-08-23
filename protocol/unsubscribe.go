@@ -1,4 +1,4 @@
-package connection
+package protocol
 
 /*
 ["unsubscribe", "/tmp", "sub1"]

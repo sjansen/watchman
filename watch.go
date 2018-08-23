@@ -1,12 +1,12 @@
 package watchman
 
 import (
-	"github.com/sjansen/watchman/connection"
+	"github.com/sjansen/watchman/protocol"
 )
 
 // A Watch represents a directory, or watched root, that Watchman is watching for changes.
 type Watch struct {
-	conn *connection.Connection
+	conn *protocol.Connection
 	root string
 }
 
@@ -14,7 +14,7 @@ type Watch struct {
 //
 // For details, see: https://facebook.github.io/watchman/docs/cmd/clock.html
 func (w *Watch) Clock(syncTimeout int) (clock string, err error) {
-	req := &connection.ClockRequest{
+	req := &protocol.ClockRequest{
 		Path:        w.root,
 		SyncTimeout: syncTimeout,
 	}
@@ -22,7 +22,7 @@ func (w *Watch) Clock(syncTimeout int) (clock string, err error) {
 		return
 	}
 
-	res := &connection.ClockResponse{}
+	res := &protocol.ClockResponse{}
 	for {
 		if unilateral, err := w.conn.Recv(res); err != nil {
 			return "", err

@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	conn "github.com/sjansen/watchman/connection"
+	"github.com/sjansen/watchman/protocol"
 )
 
 const subName = "TANSTAAFL"
@@ -18,7 +18,7 @@ func TestSendAndRecv(t *testing.T) {
 	require := require.New(t)
 
 	// connect
-	c, err := conn.New()
+	c, err := protocol.Connect()
 	require.NoError(err)
 	require.NotEmpty(c.Version())
 
@@ -27,10 +27,10 @@ func TestSendAndRecv(t *testing.T) {
 	require.NoError(err)
 
 	testdata := filepath.Join(wd, "testdata")
-	err = c.Send(&conn.WatchProjectRequest{testdata})
+	err = c.Send(&protocol.WatchProjectRequest{testdata})
 	require.NoError(err)
 
-	watchProject := &conn.WatchProjectResponse{}
+	watchProject := &protocol.WatchProjectResponse{}
 	event, err := c.Recv(watchProject)
 	require.NoError(err)
 	require.Nil(event)
@@ -38,17 +38,17 @@ func TestSendAndRecv(t *testing.T) {
 	require.NotEmpty(watchRoot)
 
 	// watch-list
-	err = c.Send(&conn.WatchListRequest{})
+	err = c.Send(&protocol.WatchListRequest{})
 	require.NoError(err)
 
-	watchList := &conn.WatchListResponse{}
+	watchList := &protocol.WatchListResponse{}
 	event, err = c.Recv(watchList)
 	require.NoError(err)
 	require.Nil(event)
 	require.NotEmpty(watchList.Roots())
 
 	// clock
-	for _, req := range []*conn.ClockRequest{
+	for _, req := range []*protocol.ClockRequest{
 		{
 			Path: watchRoot,
 		},
@@ -60,7 +60,7 @@ func TestSendAndRecv(t *testing.T) {
 		err = c.Send(req)
 		require.NoError(err)
 
-		clock := &conn.ClockResponse{}
+		clock := &protocol.ClockResponse{}
 		event, err = c.Recv(clock)
 		require.NoError(err)
 		require.Nil(event)
@@ -68,13 +68,13 @@ func TestSendAndRecv(t *testing.T) {
 	}
 
 	// subscribe
-	err = c.Send(&conn.SubscribeRequest{
+	err = c.Send(&protocol.SubscribeRequest{
 		Root: testdata,
 		Name: subName,
 	})
 	require.NoError(err)
 
-	sub := &conn.SubscribeResponse{}
+	sub := &protocol.SubscribeResponse{}
 	event, err = c.Recv(sub)
 	require.NoError(err)
 	require.Nil(event)
@@ -82,14 +82,14 @@ func TestSendAndRecv(t *testing.T) {
 	require.Equal(subName, sub.Subscription())
 
 	// unsubscribe
-	err = c.Send(&conn.UnsubscribeRequest{
+	err = c.Send(&protocol.UnsubscribeRequest{
 		Root: testdata,
 		Name: subName,
 	})
 	require.NoError(err)
 
-	var unilaterals []conn.Unilateral
-	unsub := &conn.UnsubscribeResponse{}
+	var unilaterals []protocol.Unilateral
+	unsub := &protocol.UnsubscribeResponse{}
 	for {
 		event, err = c.Recv(unsub)
 		require.NoError(err)
