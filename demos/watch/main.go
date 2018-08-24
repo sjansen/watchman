@@ -59,12 +59,10 @@ func main() {
 
 	if watch, err := c.WatchProject(dir); err != nil {
 		die(err)
+	} else if clock, err := watch.Clock(0); err != nil {
+		die(err)
 	} else {
-		if clock, err := watch.Clock(0); err != nil {
-			die(err)
-		} else {
-			fmt.Printf("\nClock: %s\n\n", clock)
-		}
+		fmt.Printf("\nClock: %s\n\n", clock)
 	}
 
 	if roots, err := c.WatchList(); err != nil {
