@@ -1,0 +1,22 @@
+exclude: '^vendor/'
+repos:
+-  repo: local
+   hooks:
+   -  id: lint
+      name: various linters
+      language: system
+      entry: golangci-lint run
+      pass_filenames: false
+      types: [go]
+   -  id: critic
+      name: gocritic
+      language: system
+      entry: gocritic check-project -enable=all -withExperimental -withOpinionated -disable boolFuncPrefix,unexportedCall .
+      pass_filenames: false
+      types: [go]
+   -  id: revive
+      name: revive
+      language: system
+      entry: revive -exclude ./vendor/... ./...
+      pass_filenames: false
+      types: [go]

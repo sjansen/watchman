@@ -1,0 +1,27 @@
+run:
+    deadline: 3m
+    issues-exit-code: 1
+    tests: true
+    build-tags:
+    - integration
+
+linters:
+    enable:
+    - deadcode
+    - gocyclo
+    - gofmt
+    - goimports
+    - gosimple
+    - govet
+    - ineffassign
+    - lll
+    - maligned
+    - megacheck
+    - misspell
+    - structcheck
+    - typecheck
+    - varcheck
+
+linters-settings:
+    lll:
+        tab-width: 8
