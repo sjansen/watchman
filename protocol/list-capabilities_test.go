@@ -19,7 +19,7 @@ func TestListCapabilities(t *testing.T) {
 	}{
 		{
 			request:  `["list-capabilities"]` + "\n",
-			response: `{"capabilities":["cmd-clock","cmd-watch-project","cmd-subscribe"],"version":"4.9.0"}` + "\n",
+			response: `{"capabilities":["cmd-watch-project","cmd-subscribe"],"version":"4.9.0"}` + "\n",
 			req:      &ListCapabilitiesRequest{},
 			res: &ListCapabilitiesResponse{
 				listCapabilitiesResponse: listCapabilitiesResponse{
@@ -52,7 +52,7 @@ func TestListCapabilities(t *testing.T) {
 		require.Equal("", actual.Warning())
 		require.Equal("4.9.0", actual.Version())
 		require.Equal(
-			[]string{"cmd-clock", "cmd-watch-project", "cmd-subscribe"},
+			[]string{"cmd-watch-project", "cmd-subscribe"},
 			actual.Capabilities(),
 		)
 	}

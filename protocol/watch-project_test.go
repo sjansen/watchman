@@ -31,7 +31,7 @@ func TestWatchProject(t *testing.T) {
 		},
 		{
 			request:  `["watch-project","/tmp/testdata"]` + "\n",
-			response: `{"watcher":"fsevents","watch":"/tmp","relative_path":"testdata","version":"4.9.0"}` + "\n",
+			response: `{"watch":"/tmp","relative_path":"testdata","version":"4.9.0"}` + "\n",
 			req:      &WatchProjectRequest{"/tmp/testdata"},
 			res: &WatchProjectResponse{
 				watchProjectResponse: watchProjectResponse{

@@ -3,8 +3,21 @@ package protocol
 /*
 ["subscribe","/tmp","sub1",{"fields":["name"]}]
 {"clock":"c:1531594843:978:9:826","subscribe":"sub1","version":"4.9.0"}
-{"unilateral":true,"subscription":"sub1","root":"/tmp","files":["foo.go","bar.go"],"version":"4.9.0","clock":"c:1531594843:978:9:826","is_fresh_instance":true}
-{"unilateral":true,"subscription":"sub1","root":"/tmp","files":["foo.go"],"version":"4.9.0","since":"c:1531594843:978:9:826","clock":"c:1531594843:978:9:827","is_fresh_instance":false}
+{"unilateral":true,
+ "subscription":"sub1",
+ "root":"/tmp",
+ "files":["foo.go","bar.go"],
+ "version":"4.9.0",
+ "clock":"c:1531594843:978:9:826",
+ "is_fresh_instance":true}
+{"unilateral":true,
+ "subscription":"sub1",
+ "root":"/tmp",
+ "files":["foo.go"],
+ "version":"4.9.0",
+ "since":"c:1531594843:978:9:826",
+ "clock":"c:1531594843:978:9:827",
+ "is_fresh_instance":false}
 {"unilateral":true,"subscription":"sub1","root":"/tmp","canceled":true,"version":"4.9.0"}
 */
 
