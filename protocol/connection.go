@@ -145,7 +145,7 @@ func (c *Connection) Recv(res Response) (Unilateral, error) {
 	if err = json.Unmarshal(line, &pdu); err != nil {
 		return nil, err
 	} else if msg, ok := pdu["error"]; ok {
-		err = &WatchmanError{string(msg)}
+		err = &WatchmanError{msg: string(msg)}
 		return nil, err
 	} else if _, ok := pdu["unilateral"]; ok {
 		if _, ok := pdu["subscription"]; ok {
