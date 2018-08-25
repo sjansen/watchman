@@ -19,8 +19,9 @@ linters:
     - megacheck
     - misspell
     - structcheck
-    - typecheck
     - varcheck
+    disable:
+    - typecheck # temporary because of Go 1.11 incompatiblity
 
 linters-settings:
     lll:

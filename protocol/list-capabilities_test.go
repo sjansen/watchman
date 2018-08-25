@@ -25,7 +25,6 @@ func TestListCapabilities(t *testing.T) {
 				listCapabilitiesResponse: listCapabilitiesResponse{
 					response: response{Version: "4.9.0"},
 					Capabilities: []string{
-						"cmd-clock",
 						"cmd-watch-project",
 						"cmd-subscribe",
 					},
