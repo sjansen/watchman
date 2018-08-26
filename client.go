@@ -19,6 +19,20 @@ func Connect() (c *Client, err error) {
 	return
 }
 
+func (c *Client) handle(req protocol.Request, res protocol.Response) (err error) {
+	if err = c.conn.Send(req); err != nil {
+		return
+	}
+	for {
+		if unilateral, err := c.conn.Recv(res); err != nil {
+			return err
+		} else if unilateral == nil {
+			break
+		}
+	}
+	return
+}
+
 // HasCapability checks if the Watchman server supports a specific feature.
 func (c *Client) HasCapability(capability string) bool {
 	return c.conn.HasCapability(capability)
@@ -37,20 +51,12 @@ func (c *Client) Version() string {
 // WatchList returns a list of the dirs the Watchman server is watching.
 func (c *Client) WatchList() (roots []string, err error) {
 	req := &protocol.WatchListRequest{}
-	if err = c.conn.Send(req); err != nil {
-		return
-	}
-
 	res := &protocol.WatchListResponse{}
-	for {
-		if unilateral, err := c.conn.Recv(res); err != nil {
-			return nil, err
-		} else if unilateral == nil {
-			break
-		}
+	if err = c.handle(req, res); err != nil {
+		res = nil
+	} else {
+		roots = res.Roots()
 	}
-
-	roots = res.Roots()
 	return
 }
 
@@ -59,22 +65,14 @@ func (c *Client) WatchList() (roots []string, err error) {
 // For details, see: https://facebook.github.io/watchman/docs/cmd/watch-project.html
 func (c *Client) WatchProject(path string) (w *Watch, err error) {
 	req := &protocol.WatchProjectRequest{Path: path}
-	if err = c.conn.Send(req); err != nil {
-		return
-	}
-
 	res := &protocol.WatchProjectResponse{}
-	for {
-		if unilateral, err := c.conn.Recv(res); err != nil {
-			return nil, err
-		} else if unilateral == nil {
-			break
+	if err = c.handle(req, res); err != nil {
+		res = nil
+	} else {
+		w = &Watch{
+			client: c,
+			root:   res.Watch(),
 		}
-	}
-
-	w = &Watch{
-		conn: c.conn,
-		root: res.Watch(),
 	}
 	return
 }

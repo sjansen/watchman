@@ -6,8 +6,8 @@ import (
 
 // A Watch represents a directory, or watched root, that Watchman is watching for changes.
 type Watch struct {
-	conn *protocol.Connection
-	root string
+	client *Client
+	root   string
 }
 
 // Clock returns the current clock value for a watched root.
@@ -18,19 +18,9 @@ func (w *Watch) Clock(syncTimeout int) (clock string, err error) {
 		Path:        w.root,
 		SyncTimeout: syncTimeout,
 	}
-	if err = w.conn.Send(req); err != nil {
-		return
-	}
-
 	res := &protocol.ClockResponse{}
-	for {
-		if unilateral, err := w.conn.Recv(res); err != nil {
-			return "", err
-		} else if unilateral == nil {
-			break
-		}
+	if err = w.client.handle(req, res); err == nil {
+		clock = res.Clock()
 	}
-
-	clock = res.Clock()
 	return
 }
