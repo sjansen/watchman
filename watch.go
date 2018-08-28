@@ -24,3 +24,20 @@ func (w *Watch) Clock(syncTimeout int) (clock string, err error) {
 	}
 	return
 }
+
+// Subscribe requests notification when changes occur under a watched root.
+func (w *Watch) Subscribe(name, root string) (s *Subscription, err error) {
+	req := &protocol.SubscribeRequest{
+		Name: name,
+		Root: root,
+	}
+	res := &protocol.SubscribeResponse{}
+	if err = w.client.handle(req, res); err == nil {
+		s = &Subscription{
+			client: w.client,
+			name:   name,
+			root:   root,
+		}
+	}
+	return
+}
