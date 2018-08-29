@@ -27,6 +27,9 @@ func TestSendAndRecv(t *testing.T) {
 	require.NoError(err)
 
 	testdata := filepath.Join(wd, "testdata")
+	testdata, err = filepath.EvalSymlinks(testdata)
+	require.NoError(err)
+
 	err = c.Send(&protocol.WatchProjectRequest{testdata})
 	require.NoError(err)
 
