@@ -22,12 +22,15 @@ func TestClock(t *testing.T) {
 			response: `{"clock":"c:1531594843:978:9:345","version":"4.9.0"}` + "\n",
 			req:      &ClockRequest{Path: "/tmp"},
 			res: &ClockResponse{
-				clockResponse: clockResponse{
-					response: response{
-						Version: "4.9.0",
+				response: response{
+					pdu: ResponsePDU{
+						"version": "4.9.0",
+						"clock":   "c:1531594843:978:9:345",
 					},
-					Clock: "c:1531594843:978:9:345",
-				}},
+					version: "4.9.0",
+				},
+				clock: "c:1531594843:978:9:345",
+			},
 		},
 		{
 			request:  `["clock","/tmp",{"sync_timeout":1234}]` + "\n",
@@ -37,12 +40,15 @@ func TestClock(t *testing.T) {
 				SyncTimeout: 1234,
 			},
 			res: &ClockResponse{
-				clockResponse: clockResponse{
-					response: response{
-						Version: "4.9.0",
+				response: response{
+					pdu: ResponsePDU{
+						"version": "4.9.0",
+						"clock":   "c:1531594843:978:9:345",
 					},
-					Clock: "c:1531594843:978:9:345",
-				}},
+					version: "4.9.0",
+				},
+				clock: "c:1531594843:978:9:345",
+			},
 		},
 	} {
 		requested := &bytes.Buffer{}
@@ -57,10 +63,10 @@ func TestClock(t *testing.T) {
 		require.NoError(err)
 		require.Equal(tc.request, requested.String())
 
-		actual := &ClockResponse{}
-		event, err := c.Recv(actual)
+		pdu, err := c.Recv()
 		require.NoError(err)
-		require.Nil(event)
+		require.NotNil(pdu)
+		actual := NewClockResponse(pdu)
 		require.Equal(tc.res, actual)
 		require.Equal("", actual.Warning())
 		require.Equal("4.9.0", actual.Version())

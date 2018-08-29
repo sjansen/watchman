@@ -23,10 +23,16 @@ func TestWatchProject(t *testing.T) {
 			response: `{"watcher":"fsevents","watch":"/tmp","version":"4.9.0"}` + "\n",
 			req:      &WatchProjectRequest{"/tmp"},
 			res: &WatchProjectResponse{
-				watchProjectResponse: watchProjectResponse{
-					response: response{Version: "4.9.0"},
-					Watch:    "/tmp",
-				}},
+				response: response{
+					pdu: ResponsePDU{
+						"version": "4.9.0",
+						"watch":   "/tmp",
+						"watcher": "fsevents",
+					},
+					version: "4.9.0",
+				},
+				watch: "/tmp",
+			},
 			rpath: "",
 		},
 		{
@@ -34,11 +40,17 @@ func TestWatchProject(t *testing.T) {
 			response: `{"watch":"/tmp","relative_path":"testdata","version":"4.9.0"}` + "\n",
 			req:      &WatchProjectRequest{"/tmp/testdata"},
 			res: &WatchProjectResponse{
-				watchProjectResponse: watchProjectResponse{
-					response:     response{Version: "4.9.0"},
-					Watch:        "/tmp",
-					RelativePath: "testdata",
-				}},
+				response: response{
+					pdu: ResponsePDU{
+						"relative_path": "testdata",
+						"version":       "4.9.0",
+						"watch":         "/tmp",
+					},
+					version: "4.9.0",
+				},
+				watch:        "/tmp",
+				relativePath: "testdata",
+			},
 			rpath: "testdata",
 		},
 	} {
@@ -54,10 +66,10 @@ func TestWatchProject(t *testing.T) {
 		require.NoError(err)
 		require.Equal(tc.request, requested.String())
 
-		actual := &WatchProjectResponse{}
-		event, err := c.Recv(actual)
+		pdu, err := c.Recv()
 		require.NoError(err)
-		require.Nil(event)
+		require.NotNil(pdu)
+		actual := NewWatchProjectResponse(pdu)
 		require.Equal(tc.res, actual)
 		require.Equal("", actual.Warning())
 		require.Equal("4.9.0", actual.Version())

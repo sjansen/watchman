@@ -33,10 +33,10 @@ func TestSendAndRecv(t *testing.T) {
 	err = c.Send(&protocol.WatchProjectRequest{testdata})
 	require.NoError(err)
 
-	watchProject := &protocol.WatchProjectResponse{}
-	event, err := c.Recv(watchProject)
+	pdu, err := c.Recv()
 	require.NoError(err)
-	require.Nil(event)
+	require.NotNil(pdu)
+	watchProject := protocol.NewWatchProjectResponse(pdu)
 	watchRoot := watchProject.Watch()
 	require.NotEmpty(watchRoot)
 
@@ -44,10 +44,10 @@ func TestSendAndRecv(t *testing.T) {
 	err = c.Send(&protocol.WatchListRequest{})
 	require.NoError(err)
 
-	watchList := &protocol.WatchListResponse{}
-	event, err = c.Recv(watchList)
+	pdu, err = c.Recv()
 	require.NoError(err)
-	require.Nil(event)
+	require.NotNil(pdu)
+	watchList := protocol.NewWatchListResponse(pdu)
 	require.NotEmpty(watchList.Roots())
 
 	// clock
@@ -63,10 +63,10 @@ func TestSendAndRecv(t *testing.T) {
 		err = c.Send(req)
 		require.NoError(err)
 
-		clock := &protocol.ClockResponse{}
-		event, err = c.Recv(clock)
+		pdu, err = c.Recv()
 		require.NoError(err)
-		require.Nil(event)
+		require.NotNil(pdu)
+		clock := protocol.NewClockResponse(pdu)
 		require.NotEmpty(clock.Clock())
 	}
 
@@ -77,10 +77,10 @@ func TestSendAndRecv(t *testing.T) {
 	})
 	require.NoError(err)
 
-	sub := &protocol.SubscribeResponse{}
-	event, err = c.Recv(sub)
+	pdu, err = c.Recv()
 	require.NoError(err)
-	require.Nil(event)
+	require.NotNil(pdu)
+	sub := protocol.NewSubscribeResponse(pdu)
 	require.NotEmpty(sub.Clock())
 	require.Equal(subName, sub.Subscription())
 
@@ -91,20 +91,22 @@ func TestSendAndRecv(t *testing.T) {
 	})
 	require.NoError(err)
 
-	var unilaterals []protocol.Unilateral
-	unsub := &protocol.UnsubscribeResponse{}
+	var unilaterals []protocol.ResponsePDU
+	var unsub *protocol.UnsubscribeResponse
 	for {
-		event, err = c.Recv(unsub)
+		pdu, err = c.Recv()
 		require.NoError(err)
-		if event == nil {
+		if pdu.IsUnilateral() {
+			unilaterals = append(unilaterals, pdu)
+		} else {
+			unsub = protocol.NewUnsubscribeResponse(pdu)
 			break
 		}
-		unilaterals = append(unilaterals, event)
 	}
 	require.Equal(subName, unsub.Subscription())
 	require.NotEmpty(unilaterals)
 
-	pdu := unilaterals[0].PDU()
+	pdu = unilaterals[0]
 	require.Equal(pdu["subscription"], subName)
 	require.Equal(pdu["root"], testdata)
 	require.NotEmpty(pdu["clock"])

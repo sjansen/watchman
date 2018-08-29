@@ -19,18 +19,17 @@ func Connect() (c *Client, err error) {
 	return
 }
 
-func (c *Client) handle(req protocol.Request, res protocol.Response) (err error) {
+func (c *Client) request(req protocol.Request) (res protocol.ResponsePDU, err error) {
 	if err = c.conn.Send(req); err != nil {
 		return
 	}
 	for {
-		if unilateral, err := c.conn.Recv(res); err != nil {
-			return err
-		} else if unilateral == nil {
-			break
+		if pdu, err := c.conn.Recv(); err != nil {
+			return nil, err
+		} else if !pdu.IsUnilateral() {
+			return pdu, nil
 		}
 	}
-	return
 }
 
 // HasCapability checks if the Watchman server supports a specific feature.
@@ -51,10 +50,8 @@ func (c *Client) Version() string {
 // WatchList returns a list of the dirs the Watchman server is watching.
 func (c *Client) WatchList() (roots []string, err error) {
 	req := &protocol.WatchListRequest{}
-	res := &protocol.WatchListResponse{}
-	if err = c.handle(req, res); err != nil {
-		res = nil
-	} else {
+	if pdu, err := c.request(req); err == nil {
+		res := protocol.NewWatchListResponse(pdu)
 		roots = res.Roots()
 	}
 	return
@@ -65,10 +62,8 @@ func (c *Client) WatchList() (roots []string, err error) {
 // For details, see: https://facebook.github.io/watchman/docs/cmd/watch-project.html
 func (c *Client) WatchProject(path string) (w *Watch, err error) {
 	req := &protocol.WatchProjectRequest{Path: path}
-	res := &protocol.WatchProjectResponse{}
-	if err = c.handle(req, res); err != nil {
-		res = nil
-	} else {
+	if pdu, err := c.request(req); err == nil {
+		res := protocol.NewWatchProjectResponse(pdu)
 		w = &Watch{
 			client: c,
 			root:   res.Watch(),

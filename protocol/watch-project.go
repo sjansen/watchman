@@ -21,38 +21,40 @@ func (req *WatchProjectRequest) Args() []interface{} {
 	return []interface{}{"watch-project", req.Path}
 }
 
-type watchProjectResponse struct {
-	response
-	RelativePath string `json:"relative_path"`
-	Watch        string
-}
-
 // A WatchProjectResponse represents a response to the Watchman watch-project command.
 type WatchProjectResponse struct {
-	watchProjectResponse
+	response
+	relativePath string
+	watch        string
 }
 
-// Version returns the Watchman server version.
-func (res *WatchProjectResponse) Version() string {
-	return res.response.Version
-}
+// NewWatchProjectResponse converts a ResponsePDU to WatchProjectResponse
+func NewWatchProjectResponse(pdu ResponsePDU) (res *WatchProjectResponse) {
+	res = &WatchProjectResponse{}
+	res.response.init(pdu)
 
-// Warning returns a notice from the Watchman server that, if non-empty,
-// should be shown to the user as an advisory so that the system can
-// operate more effectively
-func (res *WatchProjectResponse) Warning() string {
-	return res.response.Warning
+	if x, ok := pdu["relative_path"]; ok {
+		if relativePath, ok := x.(string); ok {
+			res.relativePath = relativePath
+		}
+	}
+	if x, ok := pdu["watch"]; ok {
+		if watch, ok := x.(string); ok {
+			res.watch = watch
+		}
+	}
+	return
 }
 
 // RelativePath returns the difference between the requested directory
 // and the watched directory actually chosen by the watch-project
 // command.
 func (res *WatchProjectResponse) RelativePath() string {
-	return res.watchProjectResponse.RelativePath
+	return res.relativePath
 }
 
 // Watch returns the watched directory chosen by the watch-project
 // command.
 func (res *WatchProjectResponse) Watch() string {
-	return res.watchProjectResponse.Watch
+	return res.watch
 }

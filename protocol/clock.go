@@ -25,29 +25,26 @@ func (req *ClockRequest) Args() []interface{} {
 	return []interface{}{"clock", req.Path, m}
 }
 
-type clockResponse struct {
-	response
-	Clock string
-}
-
 // A ClockResponse represents a response to the Watchman clock command.
 type ClockResponse struct {
-	clockResponse
+	response
+	clock string
 }
 
-// Version returns the Watchman server version.
-func (res *ClockResponse) Version() string {
-	return res.response.Version
-}
+// NewClockResponse converts a ResponsePDU to ClockResponse
+func NewClockResponse(pdu ResponsePDU) (res *ClockResponse) {
+	res = &ClockResponse{}
+	res.response.init(pdu)
 
-// Warning returns a notice from the Watchman server that, if non-empty,
-// should be shown to the user as an advisory so that the system can
-// operate more effectively
-func (res *ClockResponse) Warning() string {
-	return res.response.Warning
+	if x, ok := pdu["clock"]; ok {
+		if clock, ok := x.(string); ok {
+			res.clock = clock
+		}
+	}
+	return
 }
 
 // Clock returns the result of the Watchman clock command.
 func (res *ClockResponse) Clock() string {
-	return res.clockResponse.Clock
+	return res.clock
 }

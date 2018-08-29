@@ -25,13 +25,17 @@ func TestSubscribe(t *testing.T) {
 				Name: "sub1",
 			},
 			res: &SubscribeResponse{
-				subscribeResponse: subscribeResponse{
-					response: response{
-						Version: "4.9.0",
+				response: response{
+					pdu: ResponsePDU{
+						"version":   "4.9.0",
+						"clock":     "c:1531594843:978:9:345",
+						"subscribe": "sub1",
 					},
-					Clock:        "c:1531594843:978:9:345",
-					Subscription: "sub1",
-				}},
+					version: "4.9.0",
+				},
+				clock:        "c:1531594843:978:9:345",
+				subscription: "sub1",
+			},
 		},
 	} {
 		requested := &bytes.Buffer{}
@@ -46,10 +50,10 @@ func TestSubscribe(t *testing.T) {
 		require.NoError(err)
 		require.Equal(tc.request, requested.String())
 
-		actual := &SubscribeResponse{}
-		event, err := c.Recv(actual)
+		pdu, err := c.Recv()
 		require.NoError(err)
-		require.Nil(event)
+		require.NotNil(pdu)
+		actual := NewSubscribeResponse(pdu)
 		require.Equal(tc.res, actual)
 		require.Equal("", actual.Warning())
 		require.Equal("4.9.0", actual.Version())

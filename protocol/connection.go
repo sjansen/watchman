@@ -11,46 +11,6 @@ import (
 	"time"
 )
 
-// Request is the interface used to encode a request PDU.
-type Request interface {
-	Args() []interface{}
-}
-
-// Response is the interface common to all response PDUs.
-type Response interface {
-	Version() string
-	Warning() string
-}
-
-type response struct {
-	Version string
-	Warning string
-}
-
-// Unilateral is the interface that wraps the PDU method.
-//
-// PDU provides access to response data decoded to primitive Go values.
-// This is most useful when Connection.Recv() is unable to return a
-// more specific Unilateral implementation.
-type Unilateral interface {
-	PDU() map[string]interface{}
-}
-
-type unilateral struct {
-	pdu map[string]json.RawMessage
-}
-
-func (u *unilateral) PDU() map[string]interface{} {
-	pdu := map[string]interface{}{}
-	for key, raw := range u.pdu {
-		var val interface{}
-		if err := json.Unmarshal(raw, &val); err == nil {
-			pdu[key] = val
-		}
-	}
-	return pdu
-}
-
 // Connection provides a low-level interface to the Watchman service.
 type Connection struct {
 	reader *bufio.Reader
@@ -107,11 +67,12 @@ func (c *Connection) init() (err error) {
 		return
 	}
 
-	res := &ListCapabilitiesResponse{}
-	if _, err = c.Recv(res); err != nil {
+	pdu, err := c.Recv()
+	if err != nil {
 		return
 	}
 
+	res := NewListCapabilitiesResponse(pdu)
 	capset := map[string]struct{}{}
 	for _, cap := range res.Capabilities() {
 		capset[cap] = struct{}{}
@@ -123,43 +84,20 @@ func (c *Connection) init() (err error) {
 }
 
 // Recv reads and decodes a response PDU from the Watchman server.
-// A non-nil Unilateral return value indicates the PDU was sent as
-// a result of an older request, instead of the immediately previous
-// request. Most notably, as a result of the subscribe command.
-//
-// When the PDU was sent as a response to to immediately previous
-// request, the provided Response will be used to decode the PDU.
-//
-// When the PDU was sent unilaterally, Recv will attempt to return the
-// most specific Unilateral implementation available. Type assertion
-// should be used to determine that implementation. Currently, only
-// Subscription responses are recognized, but additional Unilateral
-// implementations may be added in the future.
-func (c *Connection) Recv(res Response) (Unilateral, error) {
+func (c *Connection) Recv() (pdu ResponsePDU, err error) {
 	line, err := c.reader.ReadBytes('\n')
 	if err != nil {
 		return nil, err
 	}
 
-	var pdu map[string]json.RawMessage
 	if err = json.Unmarshal(line, &pdu); err != nil {
 		return nil, err
 	} else if msg, ok := pdu["error"]; ok {
-		err = &WatchmanError{msg: string(msg)}
+		err = &WatchmanError{msg: msg.(string)}
 		return nil, err
-	} else if _, ok := pdu["unilateral"]; ok {
-		if _, ok := pdu["subscription"]; ok {
-			sub := &Subscription{
-				unilateral: unilateral{pdu: pdu},
-			}
-			err = json.Unmarshal(line, sub)
-			return sub, err
-		}
-		return &unilateral{pdu: pdu}, nil
 	}
 
-	err = json.Unmarshal(line, interface{}(res))
-	return nil, err
+	return
 }
 
 // Send encodes and sends a request PDU to the Watchman server.

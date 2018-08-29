@@ -20,29 +20,29 @@ func (req *WatchListRequest) Args() []interface{} {
 	return []interface{}{"watch-list"}
 }
 
-type watchListResponse struct {
-	response
-	Roots []string
-}
-
 // A WatchListResponse represents a response to the Watchman watch-list command.
 type WatchListResponse struct {
-	watchListResponse
+	response
+	roots []string
 }
 
-// Version returns the Watchman server version.
-func (res *WatchListResponse) Version() string {
-	return res.response.Version
-}
+// NewWatchListResponse converts a ResponsePDU to WatchListResponse
+func NewWatchListResponse(pdu ResponsePDU) (res *WatchListResponse) {
+	res = &WatchListResponse{}
+	res.response.init(pdu)
 
-// Warning returns a notice from the Watchman server that, if non-empty,
-// should be shown to the user as an advisory so that the system can
-// operate more effectively
-func (res *WatchListResponse) Warning() string {
-	return res.response.Warning
+	if x, ok := pdu["roots"]; ok {
+		if roots, ok := x.([]interface{}); ok {
+			res.roots = make([]string, len(roots))
+			for i, root := range roots {
+				res.roots[i] = root.(string)
+			}
+		}
+	}
+	return
 }
 
 // Roots returns the result of the Watchman watch-list command.
 func (res *WatchListResponse) Roots() []string {
-	return res.watchListResponse.Roots
+	return res.roots
 }

@@ -18,35 +18,37 @@ func (req *UnsubscribeRequest) Args() []interface{} {
 	return []interface{}{"unsubscribe", req.Root, req.Name}
 }
 
-type unsubscribeResponse struct {
-	response
-	Deleted      bool
-	Subscription string `json:"unsubscribe"`
-}
-
 // An UnsubscribeResponse represents a response to the Watchman unsubscribe command.
 type UnsubscribeResponse struct {
-	unsubscribeResponse
+	response
+	deleted      bool
+	subscription string
 }
 
-// Version returns the Watchman server version.
-func (res *UnsubscribeResponse) Version() string {
-	return res.response.Version
-}
+// NewUnsubscribeResponse converts a ResponsePDU to UnsubscribeResponse
+func NewUnsubscribeResponse(pdu ResponsePDU) (res *UnsubscribeResponse) {
+	res = &UnsubscribeResponse{}
+	res.response.init(pdu)
 
-// Warning returns a notice from the Watchman server that, if non-empty,
-// should be shown to the user as an advisory so that the system can
-// operate more effectively
-func (res *UnsubscribeResponse) Warning() string {
-	return res.response.Warning
+	if x, ok := pdu["deleted"]; ok {
+		if deleted, ok := x.(bool); ok {
+			res.deleted = deleted
+		}
+	}
+	if x, ok := pdu["unsubscribe"]; ok {
+		if subscription, ok := x.(string); ok {
+			res.subscription = subscription
+		}
+	}
+	return
 }
 
 // Deleted returns the status of the cancelled subscription.
 func (res *UnsubscribeResponse) Deleted() bool {
-	return res.unsubscribeResponse.Deleted
+	return res.deleted
 }
 
 // Subscription returns the name registered to the cancelled subscription.
 func (res *UnsubscribeResponse) Subscription() string {
-	return res.unsubscribeResponse.Subscription
+	return res.subscription
 }

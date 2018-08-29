@@ -22,10 +22,15 @@ func TestWatchList(t *testing.T) {
 			response: `{"roots":["/tmp"],"version":"4.9.0"}` + "\n",
 			req:      &WatchListRequest{},
 			res: &WatchListResponse{
-				watchListResponse: watchListResponse{
-					response: response{Version: "4.9.0"},
-					Roots:    []string{"/tmp"},
-				}},
+				response: response{
+					pdu: ResponsePDU{
+						"version": "4.9.0",
+						"roots":   []interface{}{"/tmp"},
+					},
+					version: "4.9.0",
+				},
+				roots: []string{"/tmp"},
+			},
 		},
 	} {
 		requested := &bytes.Buffer{}
@@ -40,10 +45,10 @@ func TestWatchList(t *testing.T) {
 		require.NoError(err)
 		require.Equal(tc.request, requested.String())
 
-		actual := &WatchListResponse{}
-		event, err := c.Recv(actual)
+		pdu, err := c.Recv()
 		require.NoError(err)
-		require.Nil(event)
+		require.NotNil(pdu)
+		actual := NewWatchListResponse(pdu)
 		require.Equal(tc.res, actual)
 		require.Equal("", actual.Warning())
 		require.Equal("4.9.0", actual.Version())

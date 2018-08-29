@@ -18,8 +18,8 @@ func (w *Watch) Clock(syncTimeout int) (clock string, err error) {
 		Path:        w.root,
 		SyncTimeout: syncTimeout,
 	}
-	res := &protocol.ClockResponse{}
-	if err = w.client.handle(req, res); err == nil {
+	if pdu, err := w.client.request(req); err == nil {
+		res := protocol.NewClockResponse(pdu)
 		clock = res.Clock()
 	}
 	return
@@ -31,8 +31,7 @@ func (w *Watch) Subscribe(name, root string) (s *Subscription, err error) {
 		Name: name,
 		Root: root,
 	}
-	res := &protocol.SubscribeResponse{}
-	if err = w.client.handle(req, res); err == nil {
+	if _, err := w.client.request(req); err == nil {
 		s = &Subscription{
 			client: w.client,
 			name:   name,

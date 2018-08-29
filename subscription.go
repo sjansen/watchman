@@ -15,8 +15,7 @@ func (s *Subscription) Unsubscribe() (err error) {
 		Name: s.name,
 		Root: s.root,
 	}
-	res := &protocol.UnsubscribeResponse{}
-	err = s.client.handle(req, res)
+	_, err = s.client.request(req)
 
 	return
 }
