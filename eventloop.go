@@ -8,21 +8,31 @@ import (
 
 type eventloop struct {
 	requests    chan<- protocol.Request
-	responses   <-chan protocol.ResponsePDU
+	responses   <-chan result
 	unilaterals <-chan protocol.ResponsePDU
 }
 
-func reader(conn *protocol.Connection) <-chan protocol.ResponsePDU {
-	ch := make(chan protocol.ResponsePDU)
+type result struct {
+	err *protocol.WatchmanError
+	pdu protocol.ResponsePDU
+}
+
+func reader(conn *protocol.Connection) <-chan result {
+	ch := make(chan result)
 	go func() {
 		defer close(ch)
 
 		for {
 			pdu, err := conn.Recv()
-			if err != nil {
+			result := result{}
+			if err == nil {
+				result.pdu = pdu
+			} else if e, ok := err.(*protocol.WatchmanError); ok {
+				result.err = e
+			} else {
 				return
 			}
-			ch <- pdu
+			ch <- result
 		}
 	}()
 	return ch
@@ -37,7 +47,7 @@ func startEventLoop(conn *protocol.Connection) (l *eventloop, stop func(bool)) {
 
 	recv := reader(conn)
 	requests := make(chan protocol.Request)
-	responses := make(chan protocol.ResponsePDU)
+	responses := make(chan result)
 	unilaterals := make(chan protocol.ResponsePDU)
 	l = &eventloop{
 		requests:    requests,
@@ -54,9 +64,9 @@ func startEventLoop(conn *protocol.Connection) (l *eventloop, stop func(bool)) {
 					ok = err == nil
 				}
 				return ok
-			case pdu, ok := <-recv:
+			case result, ok := <-recv:
 				if ok {
-					unilaterals <- pdu
+					unilaterals <- result.pdu
 				} else {
 					return false
 				}
@@ -65,11 +75,11 @@ func startEventLoop(conn *protocol.Connection) (l *eventloop, stop func(bool)) {
 	}
 
 	expectResponse := func() (ok bool) {
-		for pdu := range recv {
-			if pdu.IsUnilateral() {
-				unilaterals <- pdu
+		for result := range recv {
+			if result.err == nil && result.pdu.IsUnilateral() {
+				unilaterals <- result.pdu
 			} else {
-				responses <- pdu
+				responses <- result
 				return true
 			}
 		}

@@ -15,7 +15,7 @@ func (s *Subscription) Unsubscribe() (err error) {
 		Name: s.name,
 		Root: s.root,
 	}
-	_, err = s.client.request(req)
+	_, err = s.client.send(req)
 
 	return
 }

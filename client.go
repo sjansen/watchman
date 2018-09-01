@@ -9,7 +9,7 @@ type Client struct {
 	conn        *protocol.Connection
 	stop        func(bool)
 	requests    chan<- protocol.Request
-	responses   <-chan protocol.ResponsePDU
+	responses   <-chan result
 	unilaterals <-chan protocol.ResponsePDU
 }
 
@@ -37,9 +37,14 @@ func Connect() (c *Client, err error) {
 	return
 }
 
-func (c *Client) request(req protocol.Request) (res protocol.ResponsePDU, err error) {
+func (c *Client) send(req protocol.Request) (res protocol.ResponsePDU, err error) {
 	c.requests <- req
-	res = <-c.responses
+	result := <-c.responses
+	if result.err == nil {
+		res = result.pdu
+	} else {
+		err = result.err
+	}
 	return
 }
 
@@ -67,7 +72,7 @@ func (c *Client) Version() string {
 // WatchList returns a list of the dirs the Watchman server is watching.
 func (c *Client) WatchList() (roots []string, err error) {
 	req := &protocol.WatchListRequest{}
-	if pdu, err := c.request(req); err == nil {
+	if pdu, err := c.send(req); err == nil {
 		res := protocol.NewWatchListResponse(pdu)
 		roots = res.Roots()
 	}
@@ -79,7 +84,7 @@ func (c *Client) WatchList() (roots []string, err error) {
 // For details, see: https://facebook.github.io/watchman/docs/cmd/watch-project.html
 func (c *Client) WatchProject(path string) (w *Watch, err error) {
 	req := &protocol.WatchProjectRequest{Path: path}
-	if pdu, err := c.request(req); err == nil {
+	if pdu, err := c.send(req); err == nil {
 		res := protocol.NewWatchProjectResponse(pdu)
 		w = &Watch{
 			client: c,
