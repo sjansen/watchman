@@ -31,7 +31,7 @@ func reader(conn *protocol.Connection) <-chan protocol.ResponsePDU {
 func startEventLoop(conn *protocol.Connection) (l *eventloop, stop func(bool)) {
 	/* SHUTDOWN
 	requests:    closed by caller/stop()
-	responses:     closed locally
+	responses:   closed locally
 	unilaterals: closed locally
 	*/
 
@@ -50,14 +50,15 @@ func startEventLoop(conn *protocol.Connection) (l *eventloop, stop func(bool)) {
 			select {
 			case req, ok := <-requests:
 				if ok {
-					if err := conn.Send(req); err != nil {
-						ok = false
-					}
+					err := conn.Send(req)
+					ok = err == nil
 				}
 				return ok
 			case pdu, ok := <-recv:
 				if ok {
 					unilaterals <- pdu
+				} else {
+					return false
 				}
 			}
 		}
@@ -82,10 +83,10 @@ func startEventLoop(conn *protocol.Connection) (l *eventloop, stop func(bool)) {
 		if !delayClose {
 			close(requests)
 		}
-		for range <-responses {
+		for range responses {
 			continue
 		}
-		for range <-unilaterals {
+		for range unilaterals {
 			continue
 		}
 		if delayClose {
