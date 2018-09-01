@@ -8,7 +8,7 @@ repos:
       entry: golangci-lint run
       pass_filenames: false
       types: [go]
-   -  id: critic
+   -  id: gocritic
       name: gocritic
       language: system
       entry: gocritic check-project -enable=all -withExperimental -withOpinionated -disable boolFuncPrefix,unexportedCall .

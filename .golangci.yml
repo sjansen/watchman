@@ -11,6 +11,7 @@ linters:
     - gocyclo
     - gofmt
     - goimports
+    - golint
     - gosimple
     - govet
     - ineffassign
@@ -19,10 +20,16 @@ linters:
     - megacheck
     - misspell
     - structcheck
+    - typecheck
     - varcheck
-    disable:
-    - typecheck # temporary because of Go 1.11 incompatiblity
+    fast: false
 
 linters-settings:
+    gocyclo:
+        min-complexity: 16
+    golint:
+        min-confidence: 0
     lll:
         tab-width: 8
+    maligned:
+        suggest-new: true
