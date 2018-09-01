@@ -32,6 +32,11 @@ func (c *Client) request(req protocol.Request) (res protocol.ResponsePDU, err er
 	}
 }
 
+// Close closes the connection to the Watchman server.
+func (c *Client) Close() error {
+	return c.conn.Close()
+}
+
 // HasCapability checks if the Watchman server supports a specific feature.
 func (c *Client) HasCapability(capability string) bool {
 	return c.conn.HasCapability(capability)

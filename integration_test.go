@@ -48,4 +48,8 @@ func TestClient(t *testing.T) {
 	// unsubscribe
 	err = s.Unsubscribe()
 	require.NoError(err)
+
+	// close
+	err = c.Close()
+	require.NoError(err)
 }
