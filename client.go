@@ -1,31 +1,16 @@
 package watchman
 
 import (
-	"io"
-
 	"github.com/sjansen/watchman/protocol"
 )
 
-func producer(conn *protocol.Connection) <-chan protocol.ResponsePDU {
-	ch := make(chan protocol.ResponsePDU)
-	go func() {
-		defer close(ch)
-
-		for {
-			pdu, err := conn.Recv()
-			if err != nil {
-				return
-			}
-			ch <- pdu
-		}
-	}()
-	return ch
-}
-
 // Client provides a high-level interface to the Watchman service.
 type Client struct {
-	conn *protocol.Connection
-	recv <-chan protocol.ResponsePDU
+	conn        *protocol.Connection
+	stop        func(bool)
+	requests    chan<- protocol.Request
+	responses   <-chan protocol.ResponsePDU
+	unilaterals <-chan protocol.ResponsePDU
 }
 
 // Connect connects to or starts the Watchman server and returns a new Client.
@@ -35,29 +20,33 @@ func Connect() (c *Client, err error) {
 		return
 	}
 
+	loop, stop := startEventLoop(conn)
+	go func() { // TODO stop throwing away unilaterals
+		for range loop.unilaterals {
+			continue
+		}
+	}()
+
 	c = &Client{
-		conn: conn,
-		recv: producer(conn),
+		conn:        conn,
+		stop:        stop,
+		requests:    loop.requests,
+		responses:   loop.responses,
+		unilaterals: loop.unilaterals,
 	}
 	return
 }
 
 func (c *Client) request(req protocol.Request) (res protocol.ResponsePDU, err error) {
-	if err = c.conn.Send(req); err != nil {
-		return
-	}
-	for pdu := range c.recv {
-		if !pdu.IsUnilateral() {
-			return pdu, nil
-		}
-	}
-	// TODO replace EOF?
-	return nil, io.EOF
+	c.requests <- req
+	res = <-c.responses
+	return
 }
 
 // Close closes the connection to the Watchman server.
 func (c *Client) Close() error {
-	return c.conn.Close()
+	c.stop(false)
+	return nil
 }
 
 // HasCapability checks if the Watchman server supports a specific feature.

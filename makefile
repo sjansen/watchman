@@ -17,9 +17,9 @@ test:
 	@echo ========================================
 	go vet ./...
 	golint -set_exit_status ./ ./protocol/...
-	gocyclo -over 15 *.go protocol/
+	gocyclo -over 20 *.go protocol/
 	@echo ========================================
-	@git grep TODO  || true
-	@git grep FIXME || true
+	@git grep TODO  -- '**.go' || true
+	@git grep FIXME -- '**.go' || true
 
 .PHONY: default demos test
