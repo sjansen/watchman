@@ -1,6 +1,6 @@
 // +build integration
 
-package watchman
+package protocol_test
 
 import (
 	"os"
