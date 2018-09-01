@@ -111,4 +111,7 @@ func TestSendAndRecv(t *testing.T) {
 	require.Equal(pdu["root"], testdata)
 	require.NotEmpty(pdu["clock"])
 	require.NotEmpty(pdu["files"])
+
+	err = c.Close()
+	require.NoError(err)
 }

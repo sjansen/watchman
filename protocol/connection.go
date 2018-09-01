@@ -46,6 +46,14 @@ func Connect() (*Connection, error) {
 	return c, nil
 }
 
+// Close closes the connection to the Watchman server.
+func (c *Connection) Close() error {
+	if x, ok := c.socket.(io.Closer); ok {
+		return x.Close()
+	}
+	return nil
+}
+
 // HasCapability checks if the Watchman server supports a specific feature.
 func (c *Connection) HasCapability(capability string) bool {
 	_, ok := c.capabilities[capability]
