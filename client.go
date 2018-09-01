@@ -1,12 +1,31 @@
 package watchman
 
 import (
+	"io"
+
 	"github.com/sjansen/watchman/protocol"
 )
+
+func producer(conn *protocol.Connection) <-chan protocol.ResponsePDU {
+	ch := make(chan protocol.ResponsePDU)
+	go func() {
+		defer close(ch)
+
+		for {
+			pdu, err := conn.Recv()
+			if err != nil {
+				return
+			}
+			ch <- pdu
+		}
+	}()
+	return ch
+}
 
 // Client provides a high-level interface to the Watchman service.
 type Client struct {
 	conn *protocol.Connection
+	recv <-chan protocol.ResponsePDU
 }
 
 // Connect connects to or starts the Watchman server and returns a new Client.
@@ -15,7 +34,11 @@ func Connect() (c *Client, err error) {
 	if err != nil {
 		return
 	}
-	c = &Client{conn: conn}
+
+	c = &Client{
+		conn: conn,
+		recv: producer(conn),
+	}
 	return
 }
 
@@ -23,13 +46,13 @@ func (c *Client) request(req protocol.Request) (res protocol.ResponsePDU, err er
 	if err = c.conn.Send(req); err != nil {
 		return
 	}
-	for {
-		if pdu, err := c.conn.Recv(); err != nil {
-			return nil, err
-		} else if !pdu.IsUnilateral() {
+	for pdu := range c.recv {
+		if !pdu.IsUnilateral() {
 			return pdu, nil
 		}
 	}
+	// TODO replace EOF?
+	return nil, io.EOF
 }
 
 // Close closes the connection to the Watchman server.
