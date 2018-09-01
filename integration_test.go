@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/sjansen/watchman"
 	"github.com/stretchr/testify/require"
@@ -74,7 +75,7 @@ func TestClient(t *testing.T) {
 	err = touch(dir, "foo", "bar", "baz")
 	require.NoError(err)
 
-	clock2, err := watch.Clock(3000)
+	clock2, err := watch.Clock(3 * time.Second)
 	require.NoError(err)
 	require.NotEmpty(clock2)
 	require.NotEqual(clock1, clock2)

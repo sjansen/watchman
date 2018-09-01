@@ -1,6 +1,8 @@
 package watchman
 
 import (
+	"time"
+
 	"github.com/sjansen/watchman/protocol"
 )
 
@@ -13,10 +15,11 @@ type Watch struct {
 // Clock returns the current clock value for a watched root.
 //
 // For details, see: https://facebook.github.io/watchman/docs/cmd/clock.html
-func (w *Watch) Clock(syncTimeout int) (clock string, err error) {
+func (w *Watch) Clock(syncTimeout time.Duration) (clock string, err error) {
+	timeout := syncTimeout.Nanoseconds() / int64(time.Millisecond)
 	req := &protocol.ClockRequest{
 		Path:        w.root,
-		SyncTimeout: syncTimeout,
+		SyncTimeout: int(timeout),
 	}
 	pdu, err := w.client.send(req)
 	if err == nil {
