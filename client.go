@@ -21,12 +21,6 @@ func Connect() (c *Client, err error) {
 	}
 
 	loop, stop := startEventLoop(conn)
-	go func() { // TODO stop throwing away unilaterals
-		for range loop.unilaterals {
-			continue
-		}
-	}()
-
 	c = &Client{
 		conn:        conn,
 		stop:        stop,
@@ -62,6 +56,10 @@ func (c *Client) HasCapability(capability string) bool {
 // SockName returns the UNIX domain socket used to communicate with the Watchman server.
 func (c *Client) SockName() string {
 	return c.conn.SockName()
+}
+
+func (c *Client) Unilaterals() <-chan protocol.ResponsePDU {
+	return c.unilaterals
 }
 
 // Version returns the version of the Watchman server.
