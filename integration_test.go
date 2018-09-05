@@ -88,7 +88,7 @@ func TestClient(t *testing.T) {
 	require.Equal(0, n)
 
 	// watch-list
-	roots, err := c.WatchList()
+	roots, err := c.Watches()
 	require.NoError(err)
 	require.NotEmpty(roots)
 

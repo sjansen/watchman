@@ -68,8 +68,8 @@ func (c *Client) Version() string {
 	return c.conn.Version()
 }
 
-// WatchList returns a list of the dirs the Watchman server is watching.
-func (c *Client) WatchList() (roots []string, err error) {
+// Watches returns a list of the dirs the Watchman server is watching.
+func (c *Client) Watches() (roots []string, err error) {
 	req := &protocol.WatchListRequest{}
 	if pdu, err := c.send(req); err == nil {
 		res := protocol.NewWatchListResponse(pdu)
