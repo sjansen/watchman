@@ -8,10 +8,11 @@ import (
 	"time"
 
 	"github.com/sjansen/watchman"
+	"github.com/sjansen/watchman/protocol"
 )
 
 func coalesce(watch *watchman.Watch) {
-	time.Sleep(250 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 	if clock, err := watch.Clock(0); err != nil {
 		die(err)
 	} else {
@@ -66,6 +67,19 @@ func main() {
 	c := connect()
 	fmt.Printf("version: %s\n\n", c.Version())
 
+	go func() {
+		for pdu := range c.Updates() {
+			s := protocol.NewSubscription(pdu)
+			fmt.Printf(
+				"Update detected: (clock=%q)\n",
+				s.Clock(),
+			)
+			for _, filename := range s.Files() {
+				fmt.Printf("\t%s\n", filename)
+			}
+		}
+	}()
+
 	dir := mkdir()
 	dir, err := filepath.EvalSymlinks(dir)
 	if err != nil {
@@ -76,6 +90,7 @@ func main() {
 	if err != nil {
 		die(err)
 	}
+	coalesce(watch)
 
 	touch(dir, "foo", "bar", "baz")
 	coalesce(watch)
