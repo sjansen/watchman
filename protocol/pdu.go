@@ -62,3 +62,7 @@ func (pdu ResponsePDU) IsUnilateral() bool {
 	}
 	return false
 }
+
+// The ResponseTranslator type is an adapter that converts a
+// ResponsePDU to a more exact Response.
+type ResponseTranslator func(ResponsePDU) Response
