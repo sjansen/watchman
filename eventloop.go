@@ -7,9 +7,9 @@ import (
 )
 
 type eventloop struct {
-	requests    chan<- protocol.Request
-	responses   <-chan result
-	unilaterals <-chan protocol.ResponsePDU
+	requests  chan<- protocol.Request
+	responses <-chan result
+	updates   <-chan protocol.ResponsePDU
 }
 
 type result struct {
@@ -42,17 +42,17 @@ func startEventLoop(conn *protocol.Connection) (l *eventloop, stop func(bool)) {
 	/* SHUTDOWN
 	requests:    closed by caller/stop()
 	responses:   closed locally
-	unilaterals: closed locally
+	updates:     closed locally
 	*/
 
 	recv := reader(conn)
 	requests := make(chan protocol.Request)
 	responses := make(chan result)
-	unilaterals := make(chan protocol.ResponsePDU)
+	updates := make(chan protocol.ResponsePDU)
 	l = &eventloop{
-		requests:    requests,
-		responses:   responses,
-		unilaterals: unilaterals,
+		requests:  requests,
+		responses: responses,
+		updates:   updates,
 	}
 
 	expectRequest := func() (ok bool) {
@@ -66,7 +66,7 @@ func startEventLoop(conn *protocol.Connection) (l *eventloop, stop func(bool)) {
 				return ok
 			case result, ok := <-recv:
 				if ok {
-					unilaterals <- result.pdu
+					updates <- result.pdu
 				} else {
 					return false
 				}
@@ -77,7 +77,7 @@ func startEventLoop(conn *protocol.Connection) (l *eventloop, stop func(bool)) {
 	expectResponse := func() (ok bool) {
 		for result := range recv {
 			if result.err == nil && result.pdu.IsUnilateral() {
-				unilaterals <- result.pdu
+				updates <- result.pdu
 			} else {
 				responses <- result
 				return true
@@ -96,7 +96,7 @@ func startEventLoop(conn *protocol.Connection) (l *eventloop, stop func(bool)) {
 		for range responses {
 			continue
 		}
-		for range unilaterals {
+		for range updates {
 			continue
 		}
 		if delayClose {
@@ -111,7 +111,7 @@ func startEventLoop(conn *protocol.Connection) (l *eventloop, stop func(bool)) {
 		defer func() {
 			conn.Close()
 			close(responses)
-			close(unilaterals)
+			close(updates)
 			for range requests {
 				continue
 			}

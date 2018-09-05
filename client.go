@@ -6,11 +6,11 @@ import (
 
 // Client provides a high-level interface to the Watchman service.
 type Client struct {
-	conn        *protocol.Connection
-	stop        func(bool)
-	requests    chan<- protocol.Request
-	responses   <-chan result
-	unilaterals <-chan protocol.ResponsePDU
+	conn      *protocol.Connection
+	stop      func(bool)
+	requests  chan<- protocol.Request
+	responses <-chan result
+	updates   <-chan protocol.ResponsePDU
 }
 
 // Connect connects to or starts the Watchman server and returns a new Client.
@@ -22,11 +22,11 @@ func Connect() (c *Client, err error) {
 
 	loop, stop := startEventLoop(conn)
 	c = &Client{
-		conn:        conn,
-		stop:        stop,
-		requests:    loop.requests,
-		responses:   loop.responses,
-		unilaterals: loop.unilaterals,
+		conn:      conn,
+		stop:      stop,
+		requests:  loop.requests,
+		responses: loop.responses,
+		updates:   loop.updates,
 	}
 	return
 }
@@ -58,8 +58,9 @@ func (c *Client) SockName() string {
 	return c.conn.SockName()
 }
 
-func (c *Client) Unilaterals() <-chan protocol.ResponsePDU {
-	return c.unilaterals
+// Updates returns a channel the emits unilateral response PDUs.
+func (c *Client) Updates() <-chan protocol.ResponsePDU {
+	return c.updates
 }
 
 // Version returns the version of the Watchman server.

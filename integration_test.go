@@ -17,7 +17,7 @@ import (
 
 const pause = 250 * time.Millisecond
 
-func count(unilaterals <-chan protocol.ResponsePDU) (n int) {
+func count(updates <-chan protocol.ResponsePDU) (n int) {
 	var wg sync.WaitGroup
 
 	wg.Add(1)
@@ -27,7 +27,7 @@ func count(unilaterals <-chan protocol.ResponsePDU) (n int) {
 		timeout := time.After(pause)
 		for {
 			select {
-			case <-unilaterals:
+			case <-updates:
 				n++
 			case <-timeout:
 				return
@@ -84,7 +84,7 @@ func TestClient(t *testing.T) {
 	watch, err := c.WatchProject(dir)
 	require.NoError(err)
 
-	n := count(c.Unilaterals())
+	n := count(c.Updates())
 	require.Equal(0, n)
 
 	// watch-list
@@ -96,7 +96,7 @@ func TestClient(t *testing.T) {
 	s, err := watch.Subscribe("Spoon!", dir)
 	require.NoError(err)
 
-	n = count(c.Unilaterals())
+	n = count(c.Updates())
 	require.NotEqual(0, n)
 
 	// clock
@@ -107,7 +107,7 @@ func TestClient(t *testing.T) {
 	err = touch(dir, "foo", "bar", "baz")
 	require.NoError(err)
 
-	n = count(c.Unilaterals())
+	n = count(c.Updates())
 	require.NotEqual(0, n)
 
 	clock2, err := watch.Clock(pause)
