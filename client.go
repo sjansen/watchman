@@ -4,7 +4,7 @@ import (
 	"github.com/sjansen/watchman/protocol"
 )
 
-// Client provides a high-level interface to the Watchman service.
+// Client provides a high-level interface to Watchman.
 type Client struct {
 	conn      *protocol.Connection
 	stop      func(bool)
@@ -13,7 +13,8 @@ type Client struct {
 	updates   <-chan protocol.ResponsePDU
 }
 
-// Connect connects to or starts the Watchman server and returns a new Client.
+// Connect connects to or starts the Watchman server and returns a
+// new Client.
 func Connect() (c *Client, err error) {
 	conn, err := protocol.Connect()
 	if err != nil {
@@ -48,12 +49,15 @@ func (c *Client) Close() error {
 	return nil
 }
 
-// HasCapability checks if the Watchman server supports a specific feature.
+// HasCapability checks if the Watchman server supports a feature.
+//
+// For details, see: https://facebook.github.io/watchman/docs/capabilities.html
 func (c *Client) HasCapability(capability string) bool {
 	return c.conn.HasCapability(capability)
 }
 
-// SockName returns the UNIX domain socket used to communicate with the Watchman server.
+// SockName returns the location of then UNIX domain socket used
+// to communicate with the Watchman server.
 func (c *Client) SockName() string {
 	return c.conn.SockName()
 }
@@ -68,7 +72,7 @@ func (c *Client) Version() string {
 	return c.conn.Version()
 }
 
-// Watches returns a list of the dirs the Watchman server is watching.
+// Watches returns a list of directories that Watchman is monitoring.
 func (c *Client) Watches() (roots []string, err error) {
 	req := &protocol.WatchListRequest{}
 	if pdu, err := c.send(req); err == nil {
@@ -78,7 +82,8 @@ func (c *Client) Watches() (roots []string, err error) {
 	return
 }
 
-// WatchProject requests that the Watchman server monitor a dir or one of its parents for changes.
+// WatchProject requests that the Watchman server monitor a directory,
+// or one of its parents, for changes.
 //
 // For details, see: https://facebook.github.io/watchman/docs/cmd/watch-project.html
 func (c *Client) WatchProject(path string) (w *Watch, err error) {
