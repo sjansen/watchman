@@ -71,6 +71,7 @@ func TestClient(t *testing.T) {
 
 	dir, err := mkdir()
 	require.NoError(err)
+	defer os.RemoveAll(dir)
 
 	// connect
 	c, err := watchman.Connect()
