@@ -57,7 +57,7 @@ func main() {
 		}
 	}
 
-	if watch, err := c.WatchProject(dir); err != nil {
+	if watch, err := c.AddWatch(dir); err != nil {
 		die(err)
 	} else if clock, err := watch.Clock(0); err != nil {
 		die(err)

@@ -43,6 +43,24 @@ func (c *Client) send(req protocol.Request) (res protocol.ResponsePDU, err error
 	return
 }
 
+// AddWatch requests that the Watchman server monitor a directory for changes.
+//
+// Please note that Watchman may reuse an existing watch, or choose to start
+// watching a parent of the requested directory.
+//
+// For details, see: https://facebook.github.io/watchman/docs/cmd/watch-project.html
+func (c *Client) AddWatch(path string) (w *Watch, err error) {
+	req := &protocol.WatchProjectRequest{Path: path}
+	if pdu, err := c.send(req); err == nil {
+		res := protocol.NewWatchProjectResponse(pdu)
+		w = &Watch{
+			client: c,
+			root:   res.Watch(),
+		}
+	}
+	return
+}
+
 // Close closes the connection to the Watchman server.
 func (c *Client) Close() error {
 	c.stop(false)
@@ -80,20 +98,4 @@ func (c *Client) Updates() <-chan protocol.ResponsePDU {
 // Version returns the version of the Watchman server.
 func (c *Client) Version() string {
 	return c.conn.Version()
-}
-
-// WatchProject requests that the Watchman server monitor a directory,
-// or one of its parents, for changes.
-//
-// For details, see: https://facebook.github.io/watchman/docs/cmd/watch-project.html
-func (c *Client) WatchProject(path string) (w *Watch, err error) {
-	req := &protocol.WatchProjectRequest{Path: path}
-	if pdu, err := c.send(req); err == nil {
-		res := protocol.NewWatchProjectResponse(pdu)
-		w = &Watch{
-			client: c,
-			root:   res.Watch(),
-		}
-	}
-	return
 }

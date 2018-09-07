@@ -82,7 +82,7 @@ func TestClient(t *testing.T) {
 	require.NotEmpty(c.Version())
 
 	// watch-project
-	watch, err := c.WatchProject(dir)
+	watch, err := c.AddWatch(dir)
 	require.NoError(err)
 
 	n := count(c.Updates())

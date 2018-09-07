@@ -86,7 +86,7 @@ func main() {
 		die(err)
 	}
 
-	watch, err := c.WatchProject(dir)
+	watch, err := c.AddWatch(dir)
 	if err != nil {
 		die(err)
 	}
