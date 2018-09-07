@@ -12,7 +12,7 @@ import (
 )
 
 func coalesce(watch *watchman.Watch) {
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	if clock, err := watch.Clock(0); err != nil {
 		die(err)
 	} else {

@@ -56,6 +56,16 @@ func (c *Client) HasCapability(capability string) bool {
 	return c.conn.HasCapability(capability)
 }
 
+// ListWatches returns a list of directories that Watchman is monitoring.
+func (c *Client) ListWatches() (roots []string, err error) {
+	req := &protocol.WatchListRequest{}
+	if pdu, err := c.send(req); err == nil {
+		res := protocol.NewWatchListResponse(pdu)
+		roots = res.Roots()
+	}
+	return
+}
+
 // SockName returns the location of then UNIX domain socket used
 // to communicate with the Watchman server.
 func (c *Client) SockName() string {
@@ -70,16 +80,6 @@ func (c *Client) Updates() <-chan protocol.ResponsePDU {
 // Version returns the version of the Watchman server.
 func (c *Client) Version() string {
 	return c.conn.Version()
-}
-
-// Watches returns a list of directories that Watchman is monitoring.
-func (c *Client) Watches() (roots []string, err error) {
-	req := &protocol.WatchListRequest{}
-	if pdu, err := c.send(req); err == nil {
-		res := protocol.NewWatchListResponse(pdu)
-		roots = res.Roots()
-	}
-	return
 }
 
 // WatchProject requests that the Watchman server monitor a directory,

@@ -48,7 +48,7 @@ func main() {
 	c := connect()
 	fmt.Printf("version: %s\n\n", c.Version())
 
-	if roots, err := c.Watches(); err != nil {
+	if roots, err := c.ListWatches(); err != nil {
 		die(err)
 	} else {
 		fmt.Println("Watches before:")
@@ -65,7 +65,7 @@ func main() {
 		fmt.Printf("\nClock: %s\n\n", clock)
 	}
 
-	if roots, err := c.Watches(); err != nil {
+	if roots, err := c.ListWatches(); err != nil {
 		die(err)
 	} else {
 		fmt.Println("Watches after:")
