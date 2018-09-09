@@ -6,7 +6,7 @@
         {
             "label": "demo-clock",
             "type": "shell",
-            "command": "go run demos/clock/main.go",
+            "command": "go run examples/clock/main.go",
             "problemMatcher": [
                 "$go"
             ]
@@ -14,7 +14,7 @@
         {
             "label": "demo-connect",
             "type": "shell",
-            "command": "go run demos/connect/main.go",
+            "command": "go run examples/connect/main.go",
             "problemMatcher": [
                 "$go"
             ]

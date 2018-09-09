@@ -17,7 +17,7 @@ repos:
    -  id: gocritic
       name: gocritic
       language: system
-      entry: gocritic check-project -enable=all -withExperimental -withOpinionated -disable boolFuncPrefix,unexportedCall .
+      entry: gocritic check-project -enable=all -withExperimental -withOpinionated -disable boolFuncPrefix,importShadow,unexportedCall .
       pass_filenames: false
       types: [go]
    -  id: revive

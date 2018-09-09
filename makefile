@@ -1,7 +1,7 @@
 default: test
 
-demos:
-	@for I in demos/*/main.go; do \
+examples:
+	@for I in examples/*/main.go; do \
 	  echo ; \
 	  echo $$I; \
 	  pushd `dirname "$$I"` >/dev/null; \
@@ -22,4 +22,4 @@ test:
 	@git grep TODO  -- '**.go' || true
 	@git grep FIXME -- '**.go' || true
 
-.PHONY: default demos test
+.PHONY: default examples test
