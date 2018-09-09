@@ -2,8 +2,14 @@ exclude: '^vendor/'
 repos:
 -  repo: local
    hooks:
+   -  id: vet
+      name: go vet
+      language: system
+      entry: go vet  ./...
+      pass_filenames: false
+      types: [go]
    -  id: lint
-      name: various linters
+      name: golangci
       language: system
       entry: golangci-lint run
       pass_filenames: false
