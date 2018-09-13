@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 	"sync"
 
 	"github.com/sjansen/watchman"
@@ -22,21 +21,19 @@ func init() {
 	flag.Parse()
 }
 
-type byFilepath []string
+type byTypeAndPath []protocol.File
 
-func (x byFilepath) Len() int      { return len(x) }
-func (x byFilepath) Swap(i, j int) { x[i], x[j] = x[j], x[i] }
-func (x byFilepath) Less(i, j int) bool {
+func (x byTypeAndPath) Len() int      { return len(x) }
+func (x byTypeAndPath) Swap(i, j int) { x[i], x[j] = x[j], x[i] }
+func (x byTypeAndPath) Less(i, j int) bool {
 	a := x[i]
 	b := x[j]
-	if strings.ContainsRune(a, filepath.Separator) {
-		if !strings.ContainsRune(b, filepath.Separator) {
-			return true
-		}
-	} else if strings.ContainsRune(b, filepath.Separator) {
+	if a.Type < b.Type {
+		return true
+	} else if b.Type < a.Type {
 		return false
 	}
-	return a < b
+	return a.Name < b.Name
 }
 
 func connect() *watchman.Client {
@@ -119,9 +116,22 @@ func main() {
 				s.Clock(),
 			)
 			files := s.Files()
-			sort.Sort(byFilepath(files))
-			for _, filename := range files {
-				fmt.Println(" ", filename)
+			sort.Sort(byTypeAndPath(files))
+			for _, file := range files {
+				switch file.Type {
+				case "d":
+					fmt.Printf("  %s  %s/\n",
+						file.Change, file.Name,
+					)
+				case "l":
+					fmt.Printf("  %s  %s -> %s\n",
+						file.Change, file.Name, file.Target,
+					)
+				default:
+					fmt.Printf("  %s  %s\n",
+						file.Change, file.Name,
+					)
+				}
 			}
 			fmt.Println()
 		}

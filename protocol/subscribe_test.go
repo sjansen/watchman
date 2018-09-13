@@ -18,7 +18,9 @@ func TestSubscribe(t *testing.T) {
 		res      *SubscribeResponse
 	}{
 		{
-			request:  `["subscribe","/tmp","sub1",{"fields":["name"]}]` + "\n",
+			request: `["subscribe","/tmp","sub1",{` +
+				`"fields":["cclock","exists","name","symlink_target","type"]` +
+				"}]\n",
 			response: `{"clock":"c:1531594843:978:9:345","subscribe":"sub1","version":"4.9.0"}` + "\n",
 			req: &SubscribeRequest{
 				Root: "/tmp",
