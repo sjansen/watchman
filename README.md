@@ -12,10 +12,10 @@ This Go module provides a client for Facebook's [Watchman](https://facebook.gith
 
 **Why use Watchman instead of fsnotify/inotify/kevent/etc?**
 
-- Watchman conserves system resources by enabling multiple applications to share watches instead of duplicating them.
+- Watchman conserves system resources by enabling applications to share watches instead of duplicating them.
 - Watchman waits for changes to settle down before sending notifications.
 - Watchman can also be queried for changes since a previous check, or queried for current filesystem state.
-- Watchman has been battle hardened by use in other projects including Buck, Mercurial, and React Native.
+- Watchman has been battle hardened by use in projects such as Buck, Mercurial, and React Native.
 
 **Are all Watchman features supported?**
 
