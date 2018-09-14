@@ -21,11 +21,11 @@ func init() {
 	flag.Parse()
 }
 
-type byTypeAndPath []protocol.File
+type byTypeAndName []protocol.File
 
-func (x byTypeAndPath) Len() int      { return len(x) }
-func (x byTypeAndPath) Swap(i, j int) { x[i], x[j] = x[j], x[i] }
-func (x byTypeAndPath) Less(i, j int) bool {
+func (x byTypeAndName) Len() int      { return len(x) }
+func (x byTypeAndName) Swap(i, j int) { x[i], x[j] = x[j], x[i] }
+func (x byTypeAndName) Less(i, j int) bool {
 	a := x[i]
 	b := x[j]
 	if a.Type < b.Type {
@@ -116,7 +116,7 @@ func main() {
 				s.Clock(),
 			)
 			files := s.Files()
-			sort.Sort(byTypeAndPath(files))
+			sort.Sort(byTypeAndName(files))
 			for _, file := range files {
 				switch file.Type {
 				case "d":
