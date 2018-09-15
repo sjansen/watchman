@@ -11,13 +11,12 @@ import (
 	"time"
 
 	"github.com/sjansen/watchman"
-	"github.com/sjansen/watchman/protocol"
 	"github.com/stretchr/testify/require"
 )
 
 const pause = 250 * time.Millisecond
 
-func count(updates <-chan protocol.ResponsePDU) (n int) {
+func count(updates <-chan interface{}) (n int) {
 	var wg sync.WaitGroup
 
 	wg.Add(1)
@@ -85,7 +84,7 @@ func TestClient(t *testing.T) {
 	watch, err := c.AddWatch(dir)
 	require.NoError(err)
 
-	n := count(c.Updates())
+	n := count(c.Notifications())
 	require.Equal(0, n)
 
 	// watch-list
@@ -97,7 +96,7 @@ func TestClient(t *testing.T) {
 	s, err := watch.Subscribe("Spoon!", dir)
 	require.NoError(err)
 
-	n = count(c.Updates())
+	n = count(c.Notifications())
 	require.NotEqual(0, n)
 
 	// clock
@@ -108,7 +107,7 @@ func TestClient(t *testing.T) {
 	err = touch(dir, "foo", "bar", "baz")
 	require.NoError(err)
 
-	n = count(c.Updates())
+	n = count(c.Notifications())
 	require.NotEqual(0, n)
 
 	clock2, err := watch.Clock(pause)

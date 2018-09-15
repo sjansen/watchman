@@ -31,7 +31,10 @@ type SubscribeRequest struct {
 
 // Args returns values used to encode a request PDU.
 func (req *SubscribeRequest) Args() []interface{} {
-	m := map[string]interface{}{"fields": []string{"cclock", "exists", "name", "symlink_target", "type"}}
+	m := map[string]interface{}{
+		"fields": []string{
+			"cclock", "exists", "name", "size", "symlink_target", "type",
+		}}
 	return []interface{}{"subscribe", req.Root, req.Name, m}
 }
 
@@ -77,34 +80,8 @@ type Subscription struct {
 	clock           string
 	root            string
 	subscription    string
-	files           []File
+	files           []map[string]interface{}
 	isFreshInstance bool
-}
-
-// A File represents changes in the state of a single filesytem entry.
-type File struct {
-	Change Change
-	Name   string
-	Type   string
-	Target string
-}
-
-func setFileData(f *File, clock string, data map[string]interface{}) {
-	cclock := data["cclock"].(string)
-	exists := data["exists"].(bool)
-	switch {
-	case clock == cclock && exists:
-		f.Change = Created
-	case !exists:
-		f.Change = Removed
-	default:
-		f.Change = Updated
-	}
-	f.Name = data["name"].(string)
-	f.Type = data["type"].(string)
-	if f.Type == "l" {
-		f.Target = data["symlink_target"].(string)
-	}
 }
 
 // NewSubscription converts a ResponsePDU to Subscription
@@ -119,10 +96,10 @@ func NewSubscription(pdu ResponsePDU) (s *Subscription) {
 	}
 	if x, ok := pdu["files"]; ok {
 		if files, ok := x.([]interface{}); ok {
-			s.files = make([]File, len(files))
-			for i, file := range files {
+			s.files = make([]map[string]interface{}, 0, len(files))
+			for _, file := range files {
 				if data, ok := file.(map[string]interface{}); ok {
-					setFileData(&s.files[i], s.clock, data)
+					s.files = append(s.files, data)
 				}
 			}
 		}
@@ -152,7 +129,7 @@ func (s *Subscription) Clock() string {
 }
 
 // Files returns a list of of relative filepaths.
-func (s *Subscription) Files() []File {
+func (s *Subscription) Files() []map[string]interface{} {
 	return s.files
 }
 

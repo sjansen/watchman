@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	"github.com/sjansen/watchman"
-	"github.com/sjansen/watchman/protocol"
 )
 
 var (
@@ -21,7 +20,7 @@ func init() {
 	flag.Parse()
 }
 
-type byTypeAndName []protocol.File
+type byTypeAndName []watchman.File
 
 func (x byTypeAndName) Len() int      { return len(x) }
 func (x byTypeAndName) Swap(i, j int) { x[i], x[j] = x[j], x[i] }
@@ -109,13 +108,16 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		for pdu := range c.Updates() {
-			s := protocol.NewSubscription(pdu)
+		for n := range c.Notifications() {
+			cn, ok := n.(*watchman.ChangeNotification)
+			if !ok {
+				continue
+			}
 			fmt.Printf(
 				"Update: (clock=%q)\n",
-				s.Clock(),
+				cn.Clock,
 			)
-			files := s.Files()
+			files := cn.Files
 			sort.Sort(byTypeAndName(files))
 			for _, file := range files {
 				switch file.Type {

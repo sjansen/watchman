@@ -10,7 +10,7 @@ type Client struct {
 	stop      func(bool)
 	requests  chan<- protocol.Request
 	responses <-chan result
-	updates   <-chan protocol.ResponsePDU
+	updates   <-chan interface{}
 }
 
 // Connect connects to or starts the Watchman server and returns a
@@ -84,15 +84,16 @@ func (c *Client) ListWatches() (roots []string, err error) {
 	return
 }
 
+// Notifications returns a channel that emits unilateral messages
+// from the Watchman server.
+func (c *Client) Notifications() <-chan interface{} {
+	return c.updates
+}
+
 // SockName returns the location of then UNIX domain socket used
 // to communicate with the Watchman server.
 func (c *Client) SockName() string {
 	return c.conn.SockName()
-}
-
-// Updates returns a channel the emits unilateral response PDUs.
-func (c *Client) Updates() <-chan protocol.ResponsePDU {
-	return c.updates
 }
 
 // Version returns the version of the Watchman server.

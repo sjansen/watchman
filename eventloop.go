@@ -9,7 +9,7 @@ import (
 type eventloop struct {
 	requests  chan<- protocol.Request
 	responses <-chan result
-	updates   <-chan protocol.ResponsePDU
+	updates   <-chan interface{}
 }
 
 type result struct {
@@ -48,7 +48,7 @@ func startEventLoop(conn *protocol.Connection) (l *eventloop, stop func(bool)) {
 	recv := reader(conn)
 	requests := make(chan protocol.Request)
 	responses := make(chan result)
-	updates := make(chan protocol.ResponsePDU)
+	updates := make(chan interface{})
 	l = &eventloop{
 		requests:  requests,
 		responses: responses,
@@ -66,7 +66,7 @@ func startEventLoop(conn *protocol.Connection) (l *eventloop, stop func(bool)) {
 				return ok
 			case result, ok := <-recv:
 				if ok {
-					updates <- result.pdu
+					updates <- translateUnilateralPDU(result.pdu)
 				} else {
 					return false
 				}
@@ -77,7 +77,7 @@ func startEventLoop(conn *protocol.Connection) (l *eventloop, stop func(bool)) {
 	expectResponse := func() (ok bool) {
 		for result := range recv {
 			if result.err == nil && result.pdu.IsUnilateral() {
-				updates <- result.pdu
+				updates <- translateUnilateralPDU(result.pdu)
 			} else {
 				responses <- result
 				return true
@@ -127,4 +127,12 @@ func startEventLoop(conn *protocol.Connection) (l *eventloop, stop func(bool)) {
 	}()
 
 	return
+}
+
+func translateUnilateralPDU(pdu protocol.ResponsePDU) interface{} {
+	if _, ok := pdu["subscription"]; ok {
+		sub := protocol.NewSubscription(pdu)
+		return newChangeNotification(sub)
+	}
+	return pdu
 }
