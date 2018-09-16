@@ -32,8 +32,12 @@ func newChangeNotification(sub *protocol.Subscription) *ChangeNotification {
 		cclock := file["cclock"].(string)
 		exists := file["exists"].(bool)
 		switch {
-		case clock == cclock && exists:
-			f.Change = Created
+		case cclock == clock:
+			if exists {
+				f.Change = Created
+			} else {
+				f.Change = Ephemeral
+			}
 		case !exists:
 			f.Change = Removed
 		default:
@@ -56,9 +60,14 @@ type File struct {
 type StateChange int
 
 const (
+	// Created - the file was added
 	Created StateChange = 1 << iota
+	// Removed - the file was deleted
 	Removed
+	// Updated - the file's data or metadata changed
 	Updated
+	// Ephemeral - added and deleted soon after
+	Ephemeral
 )
 
 func (c StateChange) String() string {
@@ -69,6 +78,8 @@ func (c StateChange) String() string {
 		return "removed"
 	case Updated:
 		return "updated"
+	case Ephemeral:
+		return "ephemeral"
 	}
-	return "unknown"
+	return "invalid"
 }

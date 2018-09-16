@@ -97,7 +97,7 @@ func main() {
 	}
 
 	dir := resolveDir()
-	fmt.Println("Watching:", dir)
+	fmt.Printf("Watching: %s\n\n", dir)
 	watch, err := c.AddWatch(dir)
 	if err != nil {
 		die(err)
@@ -110,7 +110,7 @@ func main() {
 		defer wg.Done()
 		for n := range c.Notifications() {
 			cn, ok := n.(*watchman.ChangeNotification)
-			if !ok {
+			if !ok || cn.IsFreshInstance {
 				continue
 			}
 			fmt.Printf(
@@ -122,15 +122,15 @@ func main() {
 			for _, file := range files {
 				switch file.Type {
 				case "d":
-					fmt.Printf("  %s  %s/\n",
+					fmt.Printf("  %9s  %s/\n",
 						file.Change, file.Name,
 					)
 				case "l":
-					fmt.Printf("  %s  %s -> %s\n",
+					fmt.Printf("  %9s  %s -> %s\n",
 						file.Change, file.Name, file.Target,
 					)
 				default:
-					fmt.Printf("  %s  %s\n",
+					fmt.Printf("  %9s  %s\n",
 						file.Change, file.Name,
 					)
 				}

@@ -6,7 +6,7 @@ examples:
 	  echo $$I; \
 	  pushd `dirname "$$I"` >/dev/null; \
 	  echo ----------; \
-	  echo go run *.go; \
+	  go run *.go; \
 	  echo ==========; \
 	  popd >/dev/null; \
 	  echo ; \
