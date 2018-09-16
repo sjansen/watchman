@@ -33,7 +33,8 @@ type SubscribeRequest struct {
 func (req *SubscribeRequest) Args() []interface{} {
 	m := map[string]interface{}{
 		"fields": []string{
-			"cclock", "exists", "name", "size", "symlink_target", "type",
+			"cclock", "ctime", "exists", "gid", "mode", "mtime", "name",
+			"nlink", "oclock", "size", "symlink_target", "type", "uid",
 		}}
 	return []interface{}{"subscribe", req.Root, req.Name, m}
 }
