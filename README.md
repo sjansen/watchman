@@ -5,8 +5,9 @@
 [![Latest Release](https://img.shields.io/github/release/sjansen/watchman.svg)](https://github.com/sjansen/watchman/releases)
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![License](https://img.shields.io/github/license/sjansen/watchman.svg)](https://github.com/sjansen/watchman/blob/master/LICENSE)
+[![Sourcegraph](https://sourcegraph.com/github.com/sjansen/watchman/-/badge.svg)](https://sourcegraph.com/github.com/sjansen/watchman?badge)
 
-This Go module provides a client for Facebook's [Watchman](https://facebook.github.io/watchman/), a file watching service with support for recording and querying filesystem state. Two alternatives are provided. The [high-level API](https://godoc.org/github.com/sjansen/watchman) is designed for common use cases. The [low-level API](https://godoc.org/github.com/sjansen/watchman/protocol) is designed to enable advanced use cases.
+This Go module provides a client for Facebook's [Watchman](https://facebook.github.io/watchman/), a file watching service with support for recording and querying filesystem state. Two alternative APIs are provided. The [high-level API](https://godoc.org/github.com/sjansen/watchman) is designed for common use cases. The [low-level API](https://godoc.org/github.com/sjansen/watchman/protocol) is designed to enable advanced use cases.
 
 
 ## Frequently Asked Questions
