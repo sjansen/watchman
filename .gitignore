@@ -2,6 +2,7 @@
 /vendor/
 
 # Files
+/c.out
 .DS_Store
 
 # Patterns

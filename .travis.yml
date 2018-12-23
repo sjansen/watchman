@@ -11,4 +11,10 @@ install:
   - go get -u golang.org/x/lint/golint
   - go get -u github.com/fzipp/gocyclo
   - go get -t -v ./...
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-darwin-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
 script: make test
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
