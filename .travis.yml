@@ -1,0 +1,12 @@
+language: go
+os: osx
+go:
+ - "1.11.x"
+env:
+ - GO111MODULE=on
+addons:
+  homebrew:
+    packages: watchman
+install:
+  - go get -t -v ./...
+script: make test
