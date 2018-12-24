@@ -22,4 +22,7 @@ test:
 	@git grep TODO  -- '**.go' || true
 	@git grep FIXME -- '**.go' || true
 
-.PHONY: default examples test
+test-coverage: test
+	go tool cover -html=c.out
+
+.PHONY: default examples test test-coverage

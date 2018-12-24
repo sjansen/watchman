@@ -16,7 +16,8 @@ import (
 
 const pause = 250 * time.Millisecond
 
-func count(updates <-chan interface{}) (n int) {
+func collect(updates <-chan interface{}) []interface{} {
+	messages := make([]interface{}, 0, 3)
 	var wg sync.WaitGroup
 
 	wg.Add(1)
@@ -26,8 +27,8 @@ func count(updates <-chan interface{}) (n int) {
 		timeout := time.After(pause)
 		for {
 			select {
-			case <-updates:
-				n++
+			case msg := <-updates:
+				messages = append(messages, msg)
 			case <-timeout:
 				return
 			}
@@ -35,7 +36,7 @@ func count(updates <-chan interface{}) (n int) {
 	}()
 
 	wg.Wait()
-	return
+	return messages
 }
 
 func mkdir() (dir string, err error) {
@@ -54,6 +55,16 @@ func mkdir() (dir string, err error) {
 	return
 }
 
+func remove(dir string, names ...string) error {
+	for _, name := range names {
+		path := filepath.Join(dir, name)
+		err := os.Remove(path)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
 func touch(dir string, names ...string) error {
 	for _, name := range names {
 		path := filepath.Join(dir, name)
@@ -84,7 +95,8 @@ func TestClient(t *testing.T) {
 	watch, err := c.AddWatch(dir)
 	require.NoError(err)
 
-	n := count(c.Notifications())
+	updates := c.Notifications()
+	n := len(collect(updates))
 	require.Equal(0, n)
 
 	// watch-list
@@ -96,7 +108,7 @@ func TestClient(t *testing.T) {
 	s, err := watch.Subscribe("Spoon!", dir)
 	require.NoError(err)
 
-	n = count(c.Notifications())
+	n = len(collect(updates))
 	require.NotEqual(0, n)
 
 	// clock
@@ -107,13 +119,45 @@ func TestClient(t *testing.T) {
 	err = touch(dir, "foo", "bar", "baz")
 	require.NoError(err)
 
-	n = count(c.Notifications())
+	n = len(collect(updates))
 	require.NotEqual(0, n)
 
 	clock2, err := watch.Clock(pause)
 	require.NoError(err)
 	require.NotEmpty(clock2)
 	require.NotEqual(clock1, clock2)
+
+	// state changes
+	err = touch(dir, "baz", "qux", "quux")
+	require.NoError(err)
+
+	err = remove(dir, "foo", "bar", "quux")
+	require.NoError(err)
+
+	messages := collect(updates)
+	for _, msg := range messages {
+		cn, ok := msg.(*watchman.ChangeNotification)
+		if !ok || cn.IsFreshInstance {
+			continue
+		}
+		files := cn.Files
+		for _, file := range files {
+			switch file.Name {
+			case "foo", "bar":
+				require.Equal("f", file.Type)
+				require.Equal(watchman.Removed, file.Change)
+			case "baz":
+				require.Equal("f", file.Type)
+				require.Equal(watchman.Updated, file.Change)
+			case "qux":
+				require.Equal("f", file.Type)
+				require.Equal(watchman.Created, file.Change)
+			case "quux":
+				require.Equal("?", file.Type)
+				require.Equal(watchman.Ephemeral, file.Change)
+			}
+		}
+	}
 
 	// unsubscribe
 	err = s.Unsubscribe()
