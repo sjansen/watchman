@@ -26,7 +26,6 @@ All primitives necessary to access the full Watchman protocol are implemented, h
 
 For details, see [docs/status.md](docs/status.md).
 
-
 ## Roadmap
 
 This is a personal project. I work on it when I feel like it.
@@ -36,13 +35,18 @@ a list of commitments.
 Contributions are welcome.
 
 ### 0.2
- - improved test coverage
- - start testing on Windows
- - expose existing command options
+
+- improved test coverage
+- start testing on Windows
+- expose existing command options
 
 ### 0.3
- - support additional commands
 
+- support additional commands
+
+## Contributing
+
+pre-commit install
 
 ## Additional Resources
 

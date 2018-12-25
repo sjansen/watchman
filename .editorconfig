@@ -25,3 +25,13 @@ max_line_length = 0
 [makefile]
 indent_size = 8
 indent_style = tab
+
+[LICENSE]
+charset = unset
+end_of_line = unset
+indent_size = unset
+indent_style = unset
+insert_final_newline = unset
+max_line_length = unset
+tab_width = unset
+trim_trailing_whitespace = unset

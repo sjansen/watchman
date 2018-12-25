@@ -2,14 +2,14 @@ default: test
 
 examples:
 	@for I in examples/*/main.go; do \
-	  echo ; \
-	  echo $$I; \
-	  pushd `dirname "$$I"` >/dev/null; \
-	  echo ----------; \
-	  go run *.go; \
-	  echo ==========; \
-	  popd >/dev/null; \
-	  echo ; \
+		echo ; \
+		echo $$I; \
+		pushd `dirname "$$I"` >/dev/null; \
+		echo ----------; \
+		go run *.go; \
+		echo ==========; \
+		popd >/dev/null; \
+		echo ; \
 	done
 
 test:
