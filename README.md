@@ -1,13 +1,15 @@
 # Go Watchman Client
 
 [![GoDoc](https://godoc.org/github.com/sjansen/watchman?status.svg)](https://godoc.org/github.com/sjansen/watchman)
-[![Go Report Card](https://goreportcard.com/badge/github.com/sjansen/watchman)](https://goreportcard.com/report/github.com/sjansen/watchman)
 [![Latest Release](https://img.shields.io/github/release/sjansen/watchman.svg)](https://github.com/sjansen/watchman/releases)
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
-[![Build Status](https://travis-ci.com/sjansen/watchman.svg?branch=master)](https://travis-ci.com/sjansen/watchman)
 [![License](https://img.shields.io/github/license/sjansen/watchman.svg)](https://github.com/sjansen/watchman/blob/master/LICENSE)
 [![Sourcegraph](https://sourcegraph.com/github.com/sjansen/watchman/-/badge.svg)](https://sourcegraph.com/github.com/sjansen/watchman?badge)
 
+[![Build Status](https://travis-ci.com/sjansen/watchman.svg?branch=master)](https://travis-ci.com/sjansen/watchman)
+[![Go Report Card](https://goreportcard.com/badge/github.com/sjansen/watchman)](https://goreportcard.com/report/github.com/sjansen/watchman)
+[![Maintainability](https://api.codeclimate.com/v1/badges/5033a51bdd94fbe70a06/maintainability)](https://codeclimate.com/github/sjansen/watchman/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/5033a51bdd94fbe70a06/test_coverage)](https://codeclimate.com/github/sjansen/watchman/test_coverage)
 
 This Go module provides a client for Facebook's
 [Watchman](https://facebook.github.io/watchman/), a file watching
