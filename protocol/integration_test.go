@@ -123,3 +123,44 @@ func TestSendAndRecv(t *testing.T) {
 	err = c.Close()
 	require.NoError(err)
 }
+
+type NoopRequest struct{}
+
+func (req *NoopRequest) Args() []interface{} {
+	return []interface{}{"noop"}
+}
+
+type VersionRequest struct{}
+
+func (req *VersionRequest) Args() []interface{} {
+	return []interface{}{"version"}
+}
+
+func TestInvalidCommand(t *testing.T) {
+	require := require.New(t)
+
+	c, err := protocol.Connect()
+	require.NoError(err)
+	require.NotEmpty(c.Version())
+
+	// invalid command should result in WatchmanError
+	err = c.Send(&NoopRequest{})
+	require.NoError(err)
+
+	pdu, err := c.Recv()
+	require.Nil(pdu)
+	require.NotNil(err)
+	require.IsType(&protocol.WatchmanError{}, err)
+	require.NotEmpty(err.Error())
+
+	// connection should still be valid
+	err = c.Send(&VersionRequest{})
+	require.NoError(err)
+
+	pdu, err = c.Recv()
+	require.NotNil(pdu)
+	require.NoError(err)
+
+	err = c.Close()
+	require.NoError(err)
+}
