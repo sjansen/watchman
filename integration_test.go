@@ -59,12 +59,13 @@ func remove(dir string, names ...string) error {
 	for _, name := range names {
 		path := filepath.Join(dir, name)
 		err := os.Remove(path)
-		if err != nil {
+		if err != nil && !os.IsNotExist(err) {
 			return err
 		}
 	}
 	return nil
 }
+
 func touch(dir string, names ...string) error {
 	for _, name := range names {
 		path := filepath.Join(dir, name)
@@ -117,6 +118,9 @@ func TestClient(t *testing.T) {
 	require.NotEmpty(clock1)
 
 	err = touch(dir, "foo", "bar", "baz")
+	require.NoError(err)
+
+	err = remove(dir, "bar", "qux", "quux")
 	require.NoError(err)
 
 	n = len(collect(updates))
