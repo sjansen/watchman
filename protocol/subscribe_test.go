@@ -64,3 +64,80 @@ func TestSubscribe(t *testing.T) {
 		require.Equal("sub1", actual.Subscription())
 	}
 }
+
+func TestNewSubscription(t *testing.T) {
+	require := require.New(t)
+
+	for _, tc := range []struct {
+		pdu ResponsePDU
+		sub *Subscription
+	}{
+		{
+			pdu: ResponsePDU{
+				"unilateral":        true,
+				"subscription":      "sub2",
+				"root":              "/tmp",
+				"version":           "4.9.0",
+				"clock":             "c:1531594843:978:9:826",
+				"is_fresh_instance": true,
+				"files": []interface{}{
+					map[string]interface{}{"name": "foo/main.go", "exists": true},
+					map[string]interface{}{"name": "bar/main.go", "exists": true},
+				},
+			},
+			sub: &Subscription{
+				response: response{
+					pdu: ResponsePDU{
+						"unilateral":        true,
+						"subscription":      "sub2",
+						"root":              "/tmp",
+						"version":           "4.9.0",
+						"clock":             "c:1531594843:978:9:826",
+						"is_fresh_instance": true,
+						"files": []interface{}{
+							map[string]interface{}{
+								"name": "foo/main.go", "exists": true,
+							},
+							map[string]interface{}{
+								"name": "bar/main.go", "exists": true,
+							},
+						},
+					},
+					version: "4.9.0",
+				},
+				clock:           "c:1531594843:978:9:826",
+				root:            "/tmp",
+				subscription:    "sub2",
+				isFreshInstance: true,
+				files: []map[string]interface{}{
+					{"name": "foo/main.go", "exists": true},
+					{"name": "bar/main.go", "exists": true},
+				},
+			},
+		},
+	} {
+		actual := NewSubscription(tc.pdu)
+		require.Equal(tc.sub, actual)
+	}
+}
+
+func TestSubscription(t *testing.T) {
+	require := require.New(t)
+
+	s := &Subscription{
+		clock:        "c:2642605954:867:8:937",
+		root:         "/projects/x",
+		subscription: "sub42",
+		files: []map[string]interface{}{
+			{"name": "secrets.txt", "exists": true},
+		},
+		isFreshInstance: true,
+	}
+	require.Equal("c:2642605954:867:8:937", s.Clock())
+	require.Equal(true, s.IsFreshInstance())
+	require.Equal("/projects/x", s.Root())
+	require.Equal("sub42", s.Subscription())
+	require.Equal([]map[string]interface{}{
+		{"name": "secrets.txt", "exists": true},
+	}, s.Files())
+}

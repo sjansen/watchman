@@ -1,19 +1,30 @@
 package protocol
 
 /*
-["subscribe","/tmp","sub1",{"fields":["name"]}]
+["subscribe","/tmp","sub1",{"fields":["exists","name","type"]}]
 {"clock":"c:1531594843:978:9:826","subscribe":"sub1","version":"4.9.0"}
 {"unilateral":true,
  "subscription":"sub1",
  "root":"/tmp",
- "files":["foo/main.go","bar/main.go"],
+ "files":[{
+  "exists", true,
+  "name": "foo/main.go",
+  "type": "f"
+ }, {
+  "exists", true,
+  "name": "bar/main.go",
+  "type": "f"
+ }],
  "version":"4.9.0",
  "clock":"c:1531594843:978:9:826",
  "is_fresh_instance":true}
 {"unilateral":true,
  "subscription":"sub1",
  "root":"/tmp",
- "files":["foo/main.go"],
+ "files":[{
+  "name": "foo/main.go",
+  "type": "f"
+ }],
  "version":"4.9.0",
  "since":"c:1531594843:978:9:826",
  "clock":"c:1531594843:978:9:827",
@@ -115,7 +126,7 @@ func NewSubscription(pdu ResponsePDU) (s *Subscription) {
 			s.root = root
 		}
 	}
-	if x, ok := pdu["subscribe"]; ok {
+	if x, ok := pdu["subscription"]; ok {
 		if subscription, ok := x.(string); ok {
 			s.subscription = subscription
 		}
