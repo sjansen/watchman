@@ -22,6 +22,14 @@ func TestSendAndRecv(t *testing.T) {
 	require.NoError(err)
 	require.NotEmpty(c.Version())
 
+	// sockname
+	sockname := c.SockName()
+	require.NotEmpty(sockname)
+
+	// capabilities
+	require.Equal(true, c.HasCapability("cmd-watch-project"))
+	require.Equal(false, c.HasCapability("fire-the-missles"))
+
 	// watch-project
 	wd, err := os.Getwd()
 	require.NoError(err)
