@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sync"
 	"testing"
 	"time"
@@ -39,7 +40,7 @@ func collect(updates <-chan interface{}) []interface{} {
 	return messages
 }
 
-func mkdir() (dir string, err error) {
+func tmpdir() (dir string, err error) {
 	dir, err = ioutil.TempDir("", "watchman-client-test")
 	if err != nil {
 		return
@@ -55,6 +56,17 @@ func mkdir() (dir string, err error) {
 	return
 }
 
+func mkdir(dir string, names ...string) error {
+	for _, name := range names {
+		name = filepath.Join(dir, name)
+		err := os.Mkdir(name, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func remove(dir string, names ...string) error {
 	for _, name := range names {
 		path := filepath.Join(dir, name)
@@ -64,6 +76,11 @@ func remove(dir string, names ...string) error {
 		}
 	}
 	return nil
+}
+
+func symlink(dir, name, target string) error {
+	name = filepath.Join(dir, name)
+	return os.Symlink(target, name)
 }
 
 func touch(dir string, names ...string) error {
@@ -80,7 +97,7 @@ func touch(dir string, names ...string) error {
 func TestClient(t *testing.T) {
 	require := require.New(t)
 
-	dir, err := mkdir()
+	dir, err := tmpdir()
 	require.NoError(err)
 	defer os.RemoveAll(dir)
 
@@ -91,6 +108,10 @@ func TestClient(t *testing.T) {
 	// connection metadata
 	require.NotEmpty(c.SockName())
 	require.NotEmpty(c.Version())
+
+	// capabilities
+	require.Equal(true, c.HasCapability("cmd-subscribe"))
+	require.Equal(false, c.HasCapability("grant-three-wishes"))
 
 	// watch-project
 	watch, err := c.AddWatch(dir)
@@ -138,6 +159,15 @@ func TestClient(t *testing.T) {
 	err = remove(dir, "foo", "bar", "quux")
 	require.NoError(err)
 
+	err = mkdir(dir, "corge", "grault")
+	require.NoError(err)
+
+	switch runtime.GOOS {
+	case "darwin", "freebsd", "linux":
+		err = symlink(dir, "garply", "grault")
+		require.NoError(err)
+	}
+
 	messages := collect(updates)
 	for _, msg := range messages {
 		cn, ok := msg.(*watchman.ChangeNotification)
@@ -159,6 +189,12 @@ func TestClient(t *testing.T) {
 			case "quux":
 				require.Equal("?", file.Type)
 				require.Equal(watchman.Ephemeral, file.Change)
+			case "corge", "grault":
+				require.Equal("d", file.Type)
+				require.Equal(watchman.Created, file.Change)
+			case "garply":
+				require.Equal("l", file.Type)
+				require.Equal(watchman.Created, file.Change)
 			}
 		}
 	}
