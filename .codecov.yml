@@ -1,0 +1,8 @@
+coverage:
+  range: 75..95
+  round: down
+  precision: 2
+ignore:
+  - "docs"
+  - "examples"
+  - "scripts"

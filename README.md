@@ -7,9 +7,9 @@
 [![Sourcegraph](https://sourcegraph.com/github.com/sjansen/watchman/-/badge.svg)](https://sourcegraph.com/github.com/sjansen/watchman?badge)
 
 [![Build Status](https://travis-ci.com/sjansen/watchman.svg?branch=master)](https://travis-ci.com/sjansen/watchman)
+[![codecov](https://codecov.io/gh/sjansen/watchman/branch/master/graph/badge.svg)](https://codecov.io/gh/sjansen/watchman)
 [![Go Report Card](https://goreportcard.com/badge/github.com/sjansen/watchman)](https://goreportcard.com/report/github.com/sjansen/watchman)
 [![Maintainability](https://api.codeclimate.com/v1/badges/5033a51bdd94fbe70a06/maintainability)](https://codeclimate.com/github/sjansen/watchman/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/5033a51bdd94fbe70a06/test_coverage)](https://codeclimate.com/github/sjansen/watchman/test_coverage)
 
 This Go module provides a client for Facebook's
 [Watchman](https://facebook.github.io/watchman/), a file watching
