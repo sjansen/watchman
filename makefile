@@ -1,3 +1,5 @@
+.PHONY:  default  examples  test  test-coverage
+
 default: test
 
 examples:
@@ -13,7 +15,8 @@ examples:
 	done
 
 test:
-	go test -coverprofile=c.out -tags integration ./...
+	mkdir -p dist
+	go test -coverpkg ./... -coverprofile=dist/coverage.txt -tags integration ./...
 	@echo ========================================
 	go vet ./...
 	golint -set_exit_status ./ ./protocol/...
@@ -23,6 +26,4 @@ test:
 	@git grep FIXME -- '**.go' || true
 
 test-coverage: test
-	go tool cover -html=c.out
-
-.PHONY: default examples test test-coverage
+	go tool cover -html=dist/coverage.txt

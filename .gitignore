@@ -1,10 +1,10 @@
 # Directories
-/vendor/
+/dist/
 
 # Files
-/c.out
 /TODO
 .DS_Store
+coverage.txt
 
 # Patterns
 .*.sw[op]
