@@ -8,6 +8,7 @@ run:
 linters:
     enable:
     - deadcode
+    - gocritic
     - gocyclo
     - gofmt
     - goimports
@@ -22,6 +23,8 @@ linters:
     - structcheck
     - typecheck
     - varcheck
+    disable:
+    - errcheck  # configurable ignore
     fast: false
 
 linters-settings:
