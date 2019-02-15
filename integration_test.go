@@ -3,6 +3,7 @@
 package watchman_test
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -84,10 +85,25 @@ func symlink(dir, name, target string) error {
 }
 
 func touch(dir string, names ...string) error {
+	data := []byte("Kilroy was here.")
 	for _, name := range names {
 		path := filepath.Join(dir, name)
-		err := ioutil.WriteFile(path, []byte("Kilroy was here."), os.ModePerm)
+
+		f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
 		if err != nil {
+			return err
+		}
+
+		n, err := f.Write(data)
+		if err == nil && n < len(data) {
+			return io.ErrShortWrite
+		}
+
+		if err = f.Sync(); err != nil {
+			return err
+		}
+
+		if err = f.Close(); err != nil {
 			return err
 		}
 	}
@@ -138,10 +154,10 @@ func TestClient(t *testing.T) {
 	require.NoError(err)
 	require.NotEmpty(clock1)
 
-	err = touch(dir, "foo", "bar", "baz")
+	err = remove(dir, "qux", "quux")
 	require.NoError(err)
 
-	err = remove(dir, "bar", "qux", "quux")
+	err = touch(dir, "foo", "bar", "baz")
 	require.NoError(err)
 
 	n = len(collect(updates))
