@@ -1,0 +1,13 @@
+version: 1
+cli:
+  server: https://app.fossa.io
+  fetcher: custom
+  project: watchman
+analyze:
+  modules:
+  - name: github.com/sjansen/watchman
+    type: go
+    target: github.com/sjansen/watchman
+    path: .
+    options:
+      all-tags: true
