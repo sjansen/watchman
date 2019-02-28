@@ -1,7 +1,7 @@
 module github.com/sjansen/watchman
 
 require (
-	github.com/Microsoft/go-winio v0.4.11
+	github.com/Microsoft/go-winio v0.4.12
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/testify v1.2.2
