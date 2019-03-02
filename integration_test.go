@@ -13,8 +13,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sjansen/watchman"
+	"github.com/fortytw2/leaktest"
 	"github.com/stretchr/testify/require"
+
+	"github.com/sjansen/watchman"
 )
 
 const pause = 250 * time.Millisecond
@@ -113,6 +115,7 @@ func touch(dir string, names ...string) error {
 
 func TestClient(t *testing.T) {
 	require := require.New(t)
+	defer leaktest.Check(t)()
 
 	dir, err := tmpdir()
 	require.NoError(err)
