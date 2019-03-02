@@ -1,4 +1,4 @@
-.PHONY:  default  examples  test  test-coverage
+.PHONY:  default  coverage  examples  test  test-coverage
 
 default: test
 
@@ -14,16 +14,13 @@ examples:
 		echo ; \
 	done
 
+coverage:
+	go tool cover -html=dist/coverage.txt
+
 test:
-	mkdir -p dist
-	go test -coverpkg ./... -coverprofile=dist/coverage.txt -tags integration ./...
-	@echo ========================================
-	go vet ./...
-	golint -set_exit_status ./ ./protocol/...
-	gocyclo -over 17 *.go protocol/
+	scripts/run-all-tests
 	@echo ========================================
 	@git grep TODO  -- '**.go' || true
 	@git grep FIXME -- '**.go' || true
 
-test-coverage: test
-	go tool cover -html=dist/coverage.txt
+test-coverage: test coverage

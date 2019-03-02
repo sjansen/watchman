@@ -1,0 +1,30 @@
+#!/bin/sh
+set -e
+
+echo ========================================
+go version
+echo ========================================
+printenv | sort
+echo ========================================
+mkdir -p dist
+go test -race \
+    -coverpkg .,$(
+        ls -1d */ \
+        | sed -E \
+            -e :a \
+            -e '$!N ; s|\n|,| ; ta' \
+            -e 's#dist/|docs/|examples/|scripts/##g' \
+            -e 's/,,/,/g ; s/^,// ; s/,$//' \
+            -e 's|/|/...|g'
+    ) \
+    -coverprofile=dist/coverage.txt \
+    -tags integration ./...
+echo ========================================
+echo go vet...
+go vet  ./...
+echo ========================================
+echo golint...
+golint -set_exit_status ./ ./protocol/...
+echo ========================================
+echo gocyclo...
+gocyclo -over 17 *.go protocol/
