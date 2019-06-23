@@ -8,6 +8,7 @@ env:
 addons:
   homebrew:
     packages: watchman
+    update: true
 
 install:
   - go get -u golang.org/x/lint/golint
