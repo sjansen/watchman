@@ -49,16 +49,19 @@ func (c *Client) send(req protocol.Request) (res protocol.ResponsePDU, err error
 // watching a parent of the requested directory.
 //
 // For details, see: https://facebook.github.io/watchman/docs/cmd/watch-project.html
-func (c *Client) AddWatch(path string) (w *Watch, err error) {
+func (c *Client) AddWatch(path string) (*Watch, error) {
 	req := &protocol.WatchProjectRequest{Path: path}
-	if pdu, err := c.send(req); err == nil {
-		res := protocol.NewWatchProjectResponse(pdu)
-		w = &Watch{
-			client: c,
-			root:   res.Watch(),
-		}
+	pdu, err := c.send(req)
+	if err != nil {
+		return nil, err
 	}
-	return
+
+	res := protocol.NewWatchProjectResponse(pdu)
+	w := &Watch{
+		client: c,
+		root:   res.Watch(),
+	}
+	return w, nil
 }
 
 // Close closes the connection to the Watchman server.
