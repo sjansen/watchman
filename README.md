@@ -1,6 +1,6 @@
 # Go Watchman Client
 
-[![GoDoc](https://godoc.org/github.com/sjansen/watchman?status.svg)](https://godoc.org/github.com/sjansen/watchman)
+[![GoDoc](https://godoc.org/github.com/sjansen/watchman?status.svg)](https://pkg.go.dev/github.com/sjansen/watchman)
 [![Latest Release](https://img.shields.io/github/release/sjansen/watchman.svg)](https://github.com/sjansen/watchman/releases)
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![License](https://img.shields.io/github/license/sjansen/watchman.svg)](https://github.com/sjansen/watchman/blob/master/LICENSE)
