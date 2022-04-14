@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package watchman_test
@@ -206,14 +207,14 @@ func TestClient(t *testing.T) {
 				require.Equal(watchman.Updated, file.Change)
 			case "qux":
 				require.Equal("f", file.Type)
-				//require.Equal(watchman.Created, file.Change)
+				// require.Equal(watchman.Created, file.Change)
 				require.Contains(
 					[]watchman.StateChange{watchman.Created, watchman.Updated},
 					file.Change,
 				)
 			case "quux":
-				//require.Equal("?", file.Type)
-				//require.Equal(watchman.Ephemeral, file.Change)
+				// require.Equal("?", file.Type)
+				// require.Equal(watchman.Ephemeral, file.Change)
 				require.Contains("f?", file.Type)
 				require.Contains(
 					[]watchman.StateChange{watchman.Ephemeral, watchman.Removed},
@@ -221,7 +222,7 @@ func TestClient(t *testing.T) {
 				)
 			case "corge", "grault":
 				require.Equal("d", file.Type)
-				//require.Equal(watchman.Created, file.Change)
+				// require.Equal(watchman.Created, file.Change)
 				require.Contains(
 					[]watchman.StateChange{watchman.Created, watchman.Updated},
 					file.Change,
