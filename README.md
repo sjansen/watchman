@@ -55,13 +55,13 @@ a list of commitments.
 
 Contributions are welcome.
 
-### 0.2
+### 0.3
 
 - improved test coverage
 - start testing on Windows
 - expose existing command options
 
-### 0.3
+### 0.4
 
 - support additional commands
 
