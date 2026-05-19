@@ -29,11 +29,19 @@ func (w *Watch) Clock(syncTimeout time.Duration) (clock string, err error) {
 	return
 }
 
+// SubscribeOptions configures an optional set of parameters for Subscribe.
+type SubscribeOptions struct {
+	EmptyOnFreshInstance bool
+}
+
 // Subscribe requests notification when changes occur under a watched root.
-func (w *Watch) Subscribe(name, root string) (s *Subscription, err error) {
+func (w *Watch) Subscribe(name, root string, opts ...*SubscribeOptions) (s *Subscription, err error) {
 	req := &protocol.SubscribeRequest{
 		Name: name,
 		Root: root,
+	}
+	if len(opts) > 0 && opts[0] != nil {
+		req.EmptyOnFreshInstance = opts[0].EmptyOnFreshInstance
 	}
 	_, err = w.client.send(req)
 	if err == nil {

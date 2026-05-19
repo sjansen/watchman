@@ -36,8 +36,9 @@ package protocol
 //
 // See also: https://facebook.github.io/watchman/docs/cmd/subscribe.html
 type SubscribeRequest struct {
-	Root string
-	Name string
+	Root                 string
+	Name                 string
+	EmptyOnFreshInstance bool
 }
 
 // Args returns values used to encode a request PDU.
@@ -46,7 +47,11 @@ func (req *SubscribeRequest) Args() []interface{} {
 		"fields": []string{
 			"cclock", "ctime", "exists", "gid", "mode", "mtime", "name",
 			"nlink", "oclock", "size", "symlink_target", "type", "uid",
-		}}
+		},
+	}
+	if req.EmptyOnFreshInstance {
+		m["empty_on_fresh_instance"] = true
+	}
 	return []interface{}{"subscribe", req.Root, req.Name, m}
 }
 
