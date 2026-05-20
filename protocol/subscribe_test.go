@@ -12,10 +12,12 @@ func TestSubscribe(t *testing.T) {
 	require := require.New(t)
 
 	for _, tc := range []struct {
-		request  string
-		response string
-		req      *SubscribeRequest
-		res      *SubscribeResponse
+		request      string
+		response     string
+		req          *SubscribeRequest
+		res          *SubscribeResponse
+		clock        string
+		subscription string
 	}{
 		{
 			request: `["subscribe","/tmp","sub1",{"fields":[` +
@@ -39,6 +41,34 @@ func TestSubscribe(t *testing.T) {
 				clock:        "c:1531594843:978:9:345",
 				subscription: "sub1",
 			},
+			clock:        "c:1531594843:978:9:345",
+			subscription: "sub1",
+		},
+		{
+			request: `["subscribe","/tmp","sub2",{"empty_on_fresh_instance":true,"fields":[` +
+				`"cclock","ctime","exists","gid","mode","mtime","name",` +
+				`"nlink","oclock","size","symlink_target","type","uid"` +
+				"]}]\n",
+			response: `{"clock":"c:1531594843:978:9:346","subscribe":"sub2","version":"4.9.0"}` + "\n",
+			req: &SubscribeRequest{
+				Root:                 "/tmp",
+				Name:                 "sub2",
+				EmptyOnFreshInstance: true,
+			},
+			res: &SubscribeResponse{
+				response: response{
+					pdu: ResponsePDU{
+						"version":   "4.9.0",
+						"clock":     "c:1531594843:978:9:346",
+						"subscribe": "sub2",
+					},
+					version: "4.9.0",
+				},
+				clock:        "c:1531594843:978:9:346",
+				subscription: "sub2",
+			},
+			clock:        "c:1531594843:978:9:346",
+			subscription: "sub2",
 		},
 	} {
 		requested := &bytes.Buffer{}
@@ -60,8 +90,8 @@ func TestSubscribe(t *testing.T) {
 		require.Equal(tc.res, actual)
 		require.Equal("", actual.Warning())
 		require.Equal("4.9.0", actual.Version())
-		require.Equal("c:1531594843:978:9:345", actual.Clock())
-		require.Equal("sub1", actual.Subscription())
+		require.Equal(tc.clock, actual.Clock())
+		require.Equal(tc.subscription, actual.Subscription())
 	}
 }
 
